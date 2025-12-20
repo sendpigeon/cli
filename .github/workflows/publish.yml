@@ -24,4 +24,6 @@ jobs:
       - run: pnpm install
       - run: pnpm build
       - run: pnpm test:run
-      - run: NODE_AUTH_TOKEN="" npm publish --access public
+      - name: Remove auth from npmrc for OIDC
+        run: sed -i '/_authToken/d' $NPM_CONFIG_USERCONFIG
+      - run: npm publish
