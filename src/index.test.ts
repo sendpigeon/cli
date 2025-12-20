@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { createSendPigeon, SendPigeonError } from "./index.js";
+import { createSendPigeon, SendPigeonError, type Template } from "./index.js";
 
 describe("createSendPigeon", () => {
 	it("returns client with send method", () => {
@@ -241,5 +241,152 @@ describe("error handling", () => {
 			expect((e as SendPigeonError).message).toBe("Request failed: 500");
 			expect((e as SendPigeonError).status).toBe(500);
 		}
+	});
+});
+
+describe("templates", () => {
+	const mockFetch = vi.fn();
+	const mockTemplate: Template = {
+		id: "tpl_abc123",
+		name: "welcome-email",
+		subject: "Welcome {{name}}!",
+		html: "<p>Hello {{name}}</p>",
+		text: null,
+		variables: ["name"],
+		createdAt: "2024-01-15T10:30:00Z",
+		updatedAt: "2024-01-15T10:30:00Z",
+	};
+
+	beforeEach(() => {
+		vi.stubGlobal("fetch", mockFetch);
+	});
+
+	afterEach(() => {
+		vi.unstubAllGlobals();
+		mockFetch.mockReset();
+	});
+
+	it("returns client with templates namespace", () => {
+		const client = createSendPigeon("test-api-key");
+		expect(client.templates).toBeDefined();
+		expect(typeof client.templates.list).toBe("function");
+		expect(typeof client.templates.create).toBe("function");
+		expect(typeof client.templates.get).toBe("function");
+		expect(typeof client.templates.update).toBe("function");
+		expect(typeof client.templates.delete).toBe("function");
+	});
+
+	it("list makes GET to /v1/templates", async () => {
+		mockFetch.mockResolvedValueOnce({
+			ok: true,
+			status: 200,
+			json: () => Promise.resolve([mockTemplate]),
+		});
+
+		const client = createSendPigeon("test-key");
+		const templates = await client.templates.list();
+
+		expect(mockFetch).toHaveBeenCalledWith(
+			"https://api.sendpigeon.dev/v1/templates",
+			expect.objectContaining({ method: "GET" }),
+		);
+		expect(templates).toEqual([mockTemplate]);
+	});
+
+	it("create makes POST to /v1/templates", async () => {
+		mockFetch.mockResolvedValueOnce({
+			ok: true,
+			status: 201,
+			json: () => Promise.resolve(mockTemplate),
+		});
+
+		const client = createSendPigeon("test-key");
+		const template = await client.templates.create({
+			name: "welcome-email",
+			subject: "Welcome {{name}}!",
+			html: "<p>Hello {{name}}</p>",
+		});
+
+		expect(mockFetch).toHaveBeenCalledWith(
+			"https://api.sendpigeon.dev/v1/templates",
+			expect.objectContaining({
+				method: "POST",
+				body: JSON.stringify({
+					name: "welcome-email",
+					subject: "Welcome {{name}}!",
+					html: "<p>Hello {{name}}</p>",
+				}),
+			}),
+		);
+		expect(template).toEqual(mockTemplate);
+	});
+
+	it("get makes GET to /v1/templates/{id}", async () => {
+		mockFetch.mockResolvedValueOnce({
+			ok: true,
+			status: 200,
+			json: () => Promise.resolve(mockTemplate),
+		});
+
+		const client = createSendPigeon("test-key");
+		const template = await client.templates.get("tpl_abc123");
+
+		expect(mockFetch).toHaveBeenCalledWith(
+			"https://api.sendpigeon.dev/v1/templates/tpl_abc123",
+			expect.objectContaining({ method: "GET" }),
+		);
+		expect(template).toEqual(mockTemplate);
+	});
+
+	it("update makes PATCH to /v1/templates/{id}", async () => {
+		const updatedTemplate = { ...mockTemplate, subject: "Updated subject" };
+		mockFetch.mockResolvedValueOnce({
+			ok: true,
+			status: 200,
+			json: () => Promise.resolve(updatedTemplate),
+		});
+
+		const client = createSendPigeon("test-key");
+		const template = await client.templates.update("tpl_abc123", {
+			subject: "Updated subject",
+		});
+
+		expect(mockFetch).toHaveBeenCalledWith(
+			"https://api.sendpigeon.dev/v1/templates/tpl_abc123",
+			expect.objectContaining({
+				method: "PATCH",
+				body: JSON.stringify({ subject: "Updated subject" }),
+			}),
+		);
+		expect(template).toEqual(updatedTemplate);
+	});
+
+	it("delete makes DELETE to /v1/templates/{id}", async () => {
+		mockFetch.mockResolvedValueOnce({
+			ok: true,
+			status: 204,
+		});
+
+		const client = createSendPigeon("test-key");
+		await client.templates.delete("tpl_abc123");
+
+		expect(mockFetch).toHaveBeenCalledWith(
+			"https://api.sendpigeon.dev/v1/templates/tpl_abc123",
+			expect.objectContaining({ method: "DELETE" }),
+		);
+	});
+
+	it("throws SendPigeonError for 404 on get", async () => {
+		mockFetch.mockResolvedValueOnce({
+			ok: false,
+			status: 404,
+			json: () => Promise.resolve({ message: "Template not found" }),
+		});
+
+		const client = createSendPigeon("test-key");
+
+		await expect(client.templates.get("nonexistent")).rejects.toThrow(
+			SendPigeonError,
+		);
 	});
 });

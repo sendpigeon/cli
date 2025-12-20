@@ -38,6 +38,31 @@ export type SendEmailResponse = {
 	suppressed?: string[];
 };
 
+export type Template = {
+	id: string;
+	name: string;
+	subject: string;
+	html: string | null;
+	text: string | null;
+	variables: string[];
+	createdAt: string;
+	updatedAt: string;
+};
+
+export type CreateTemplateRequest = {
+	name: string;
+	subject: string;
+	html?: string;
+	text?: string;
+};
+
+export type UpdateTemplateRequest = {
+	name?: string;
+	subject?: string;
+	html?: string | null;
+	text?: string | null;
+};
+
 export type SendPigeonConfig = {
 	apiKey: string;
 	baseUrl?: string;
@@ -48,6 +73,13 @@ export type SendPigeonClient = {
 		email: SendEmailRequest,
 		options?: SendEmailOptions,
 	) => Promise<SendEmailResponse>;
+	templates: {
+		list: () => Promise<Template[]>;
+		create: (data: CreateTemplateRequest) => Promise<Template>;
+		get: (id: string) => Promise<Template>;
+		update: (id: string, data: UpdateTemplateRequest) => Promise<Template>;
+		delete: (id: string) => Promise<void>;
+	};
 };
 
 export class SendPigeonError extends Error {
@@ -92,6 +124,10 @@ async function request<T>(
 		throw new SendPigeonError(message, response.status);
 	}
 
+	if (response.status === 204) {
+		return undefined as T;
+	}
+
 	return response.json() as Promise<T>;
 }
 
@@ -111,5 +147,22 @@ export function createSendPigeon(
 					"idempotency-key": options.idempotencyKey,
 				}),
 			}),
+		templates: {
+			list: () => request<Template[]>(baseUrl, apiKey, "GET", "/v1/templates"),
+			create: (data) =>
+				request<Template>(baseUrl, apiKey, "POST", "/v1/templates", data),
+			get: (id) =>
+				request<Template>(baseUrl, apiKey, "GET", `/v1/templates/${id}`),
+			update: (id, data) =>
+				request<Template>(
+					baseUrl,
+					apiKey,
+					"PATCH",
+					`/v1/templates/${id}`,
+					data,
+				),
+			delete: (id) =>
+				request<void>(baseUrl, apiKey, "DELETE", `/v1/templates/${id}`),
+		},
 	};
 }
