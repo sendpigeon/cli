@@ -1,6 +1,6 @@
 {
 	"name": "sendpigeon",
-	"version": "0.2.2",
+	"version": "0.2.3",
 	"description": "Official Node.js SDK for SendPigeon email API",
 	"type": "module",
 	"main": "./dist/index.js",
