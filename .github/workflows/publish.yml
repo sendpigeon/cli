@@ -19,9 +19,9 @@ jobs:
           version: 10
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           registry-url: https://registry.npmjs.org
       - run: pnpm install
       - run: pnpm build
       - run: pnpm test:run
-      - run: npm publish --access public
+      - run: NODE_AUTH_TOKEN="" npm publish --access public
