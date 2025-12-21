@@ -1,21 +1,15 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { createSendPigeon, SendPigeonError, type Template } from "./index.js";
+import { SendPigeon, SendPigeonError, type Template } from "./index.js";
 
-describe("createSendPigeon", () => {
-	it("returns client with send method", () => {
-		const client = createSendPigeon("test-api-key");
+describe("SendPigeon", () => {
+	it("has send method", () => {
+		const client = new SendPigeon("test-api-key");
 		expect(client.send).toBeDefined();
 		expect(typeof client.send).toBe("function");
 	});
 
-	it("accepts string config", () => {
-		const client = createSendPigeon("test-api-key");
-		expect(client).toBeDefined();
-	});
-
-	it("accepts object config", () => {
-		const client = createSendPigeon({
-			apiKey: "test-api-key",
+	it("accepts options", () => {
+		const client = new SendPigeon("test-api-key", {
 			baseUrl: "https://custom.api.com",
 		});
 		expect(client).toBeDefined();
@@ -40,7 +34,7 @@ describe("send", () => {
 			json: () => Promise.resolve({ id: "email-123", status: "pending" }),
 		});
 
-		const client = createSendPigeon("test-key");
+		const client = new SendPigeon("test-key");
 		await client.send({
 			from: "test@example.com",
 			to: "recipient@example.com",
@@ -62,7 +56,7 @@ describe("send", () => {
 			json: () => Promise.resolve({ id: "email-123", status: "pending" }),
 		});
 
-		const client = createSendPigeon("my-secret-key");
+		const client = new SendPigeon("my-secret-key");
 		await client.send({
 			from: "test@example.com",
 			to: "recipient@example.com",
@@ -86,7 +80,7 @@ describe("send", () => {
 			json: () => Promise.resolve({ id: "email-123", status: "pending" }),
 		});
 
-		const client = createSendPigeon("test-key");
+		const client = new SendPigeon("test-key");
 		await client.send(
 			{
 				from: "test@example.com",
@@ -113,8 +107,7 @@ describe("send", () => {
 			json: () => Promise.resolve({ id: "email-123", status: "pending" }),
 		});
 
-		const client = createSendPigeon({
-			apiKey: "test-key",
+		const client = new SendPigeon("test-key", {
 			baseUrl: "https://custom.api.com",
 		});
 		await client.send({
@@ -141,7 +134,7 @@ describe("send", () => {
 				}),
 		});
 
-		const client = createSendPigeon("test-key");
+		const client = new SendPigeon("test-key");
 		const result = await client.send({
 			from: "test@example.com",
 			to: "recipient@example.com",
@@ -185,7 +178,7 @@ describe("error handling", () => {
 			json: () => Promise.resolve({ message: "Invalid API key" }),
 		});
 
-		const client = createSendPigeon("bad-key");
+		const client = new SendPigeon("bad-key");
 
 		await expect(
 			client.send({
@@ -204,7 +197,7 @@ describe("error handling", () => {
 			json: () => Promise.resolve({ message: "Invalid email format" }),
 		});
 
-		const client = createSendPigeon("test-key");
+		const client = new SendPigeon("test-key");
 
 		try {
 			await client.send({
@@ -227,7 +220,7 @@ describe("error handling", () => {
 			json: () => Promise.reject(new Error("Invalid JSON")),
 		});
 
-		const client = createSendPigeon("test-key");
+		const client = new SendPigeon("test-key");
 
 		try {
 			await client.send({
@@ -267,7 +260,7 @@ describe("templates", () => {
 	});
 
 	it("returns client with templates namespace", () => {
-		const client = createSendPigeon("test-api-key");
+		const client = new SendPigeon("test-api-key");
 		expect(client.templates).toBeDefined();
 		expect(typeof client.templates.list).toBe("function");
 		expect(typeof client.templates.create).toBe("function");
@@ -283,7 +276,7 @@ describe("templates", () => {
 			json: () => Promise.resolve([mockTemplate]),
 		});
 
-		const client = createSendPigeon("test-key");
+		const client = new SendPigeon("test-key");
 		const templates = await client.templates.list();
 
 		expect(mockFetch).toHaveBeenCalledWith(
@@ -300,7 +293,7 @@ describe("templates", () => {
 			json: () => Promise.resolve(mockTemplate),
 		});
 
-		const client = createSendPigeon("test-key");
+		const client = new SendPigeon("test-key");
 		const template = await client.templates.create({
 			name: "welcome-email",
 			subject: "Welcome {{name}}!",
@@ -328,7 +321,7 @@ describe("templates", () => {
 			json: () => Promise.resolve(mockTemplate),
 		});
 
-		const client = createSendPigeon("test-key");
+		const client = new SendPigeon("test-key");
 		const template = await client.templates.get("tpl_abc123");
 
 		expect(mockFetch).toHaveBeenCalledWith(
@@ -346,7 +339,7 @@ describe("templates", () => {
 			json: () => Promise.resolve(updatedTemplate),
 		});
 
-		const client = createSendPigeon("test-key");
+		const client = new SendPigeon("test-key");
 		const template = await client.templates.update("tpl_abc123", {
 			subject: "Updated subject",
 		});
@@ -367,7 +360,7 @@ describe("templates", () => {
 			status: 204,
 		});
 
-		const client = createSendPigeon("test-key");
+		const client = new SendPigeon("test-key");
 		await client.templates.delete("tpl_abc123");
 
 		expect(mockFetch).toHaveBeenCalledWith(
@@ -383,7 +376,7 @@ describe("templates", () => {
 			json: () => Promise.resolve({ message: "Template not found" }),
 		});
 
-		const client = createSendPigeon("test-key");
+		const client = new SendPigeon("test-key");
 
 		await expect(client.templates.get("nonexistent")).rejects.toThrow(
 			SendPigeonError,

@@ -11,9 +11,9 @@ npm install sendpigeon
 ## Usage
 
 ```typescript
-import { createSendPigeon } from "sendpigeon";
+import { SendPigeon } from "sendpigeon";
 
-const pigeon = createSendPigeon("your-api-key");
+const pigeon = new SendPigeon("your-api-key");
 
 // Send email
 const { id, status } = await pigeon.send({
@@ -65,7 +65,7 @@ Template names must be lowercase alphanumeric with dashes (e.g., `welcome-email`
 ## Error handling
 
 ```typescript
-import { createSendPigeon, SendPigeonError } from "sendpigeon";
+import { SendPigeon, SendPigeonError } from "sendpigeon";
 
 try {
   await pigeon.send({ ... });
@@ -80,8 +80,7 @@ try {
 ## Configuration
 
 ```typescript
-const pigeon = createSendPigeon({
-  apiKey: "your-api-key",
+const pigeon = new SendPigeon("your-api-key", {
   baseUrl: "https://api.sendpigeon.dev", // optional
 });
 ```

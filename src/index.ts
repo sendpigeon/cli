@@ -68,18 +68,8 @@ export type SendPigeonConfig = {
 	baseUrl?: string;
 };
 
-export type SendPigeonClient = {
-	send: (
-		email: SendEmailRequest,
-		options?: SendEmailOptions,
-	) => Promise<SendEmailResponse>;
-	templates: {
-		list: () => Promise<Template[]>;
-		create: (data: CreateTemplateRequest) => Promise<Template>;
-		get: (id: string) => Promise<Template>;
-		update: (id: string, data: UpdateTemplateRequest) => Promise<Template>;
-		delete: (id: string) => Promise<void>;
-	};
+export type SendPigeonOptions = {
+	baseUrl?: string;
 };
 
 export class SendPigeonError extends Error {
@@ -131,38 +121,83 @@ async function request<T>(
 	return response.json() as Promise<T>;
 }
 
-export function createSendPigeon(
-	config: SendPigeonConfig | string,
-): SendPigeonClient {
-	const apiKey = typeof config === "string" ? config : config.apiKey;
-	const baseUrl =
-		typeof config === "string"
-			? DEFAULT_BASE_URL
-			: (config.baseUrl ?? DEFAULT_BASE_URL);
+export class SendPigeon {
+	private readonly apiKey: string;
+	private readonly baseUrl: string;
 
-	return {
-		send: (email, options) =>
-			request<SendEmailResponse>(baseUrl, apiKey, "POST", "/v1/emails", email, {
-				...(options?.idempotencyKey && {
-					"idempotency-key": options.idempotencyKey,
-				}),
-			}),
-		templates: {
-			list: () => request<Template[]>(baseUrl, apiKey, "GET", "/v1/templates"),
+	readonly templates: {
+		list: () => Promise<Template[]>;
+		create: (data: CreateTemplateRequest) => Promise<Template>;
+		get: (id: string) => Promise<Template>;
+		update: (id: string, data: UpdateTemplateRequest) => Promise<Template>;
+		delete: (id: string) => Promise<void>;
+	};
+
+	constructor(apiKey: string, options?: SendPigeonOptions) {
+		this.apiKey = apiKey;
+		this.baseUrl = options?.baseUrl ?? DEFAULT_BASE_URL;
+
+		this.templates = {
+			list: () =>
+				request<Template[]>(this.baseUrl, this.apiKey, "GET", "/v1/templates"),
 			create: (data) =>
-				request<Template>(baseUrl, apiKey, "POST", "/v1/templates", data),
+				request<Template>(
+					this.baseUrl,
+					this.apiKey,
+					"POST",
+					"/v1/templates",
+					data,
+				),
 			get: (id) =>
-				request<Template>(baseUrl, apiKey, "GET", `/v1/templates/${id}`),
+				request<Template>(
+					this.baseUrl,
+					this.apiKey,
+					"GET",
+					`/v1/templates/${id}`,
+				),
 			update: (id, data) =>
 				request<Template>(
-					baseUrl,
-					apiKey,
+					this.baseUrl,
+					this.apiKey,
 					"PATCH",
 					`/v1/templates/${id}`,
 					data,
 				),
 			delete: (id) =>
-				request<void>(baseUrl, apiKey, "DELETE", `/v1/templates/${id}`),
-		},
-	};
+				request<void>(
+					this.baseUrl,
+					this.apiKey,
+					"DELETE",
+					`/v1/templates/${id}`,
+				),
+		};
+	}
+
+	send(
+		email: SendEmailRequest,
+		options?: SendEmailOptions,
+	): Promise<SendEmailResponse> {
+		return request<SendEmailResponse>(
+			this.baseUrl,
+			this.apiKey,
+			"POST",
+			"/v1/emails",
+			email,
+			{
+				...(options?.idempotencyKey && {
+					"idempotency-key": options.idempotencyKey,
+				}),
+			},
+		);
+	}
+}
+
+/** @deprecated Use `new SendPigeon(apiKey, options)` instead */
+export function createSendPigeon(
+	config: SendPigeonConfig | string,
+): SendPigeon {
+	const apiKey = typeof config === "string" ? config : config.apiKey;
+	const baseUrl =
+		typeof config === "string" ? undefined : config.baseUrl;
+	return new SendPigeon(apiKey, { baseUrl });
 }
