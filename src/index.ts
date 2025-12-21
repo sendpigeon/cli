@@ -2,6 +2,11 @@ const DEFAULT_BASE_URL = "https://api.sendpigeon.dev";
 
 type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
+export type Attachment = {
+	filename: string;
+	contentType?: string;
+} & ({ content: string } | { path: string });
+
 export type SendEmailRequest = {
 	from: string;
 	to: string | string[];
@@ -13,11 +18,7 @@ export type SendEmailRequest = {
 	replyTo?: string;
 	templateId?: string;
 	variables?: Record<string, string>;
-	attachments?: Array<{
-		filename: string;
-		size: number;
-		contentType: string;
-	}>;
+	attachments?: Attachment[];
 };
 
 export type SendEmailOptions = {

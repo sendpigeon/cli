@@ -43,6 +43,42 @@ const { data, error } = await pigeon.send({
 });
 ```
 
+### With attachments
+
+```typescript
+import fs from "fs";
+
+// Base64 content
+const { data, error } = await pigeon.send({
+  from: "invoices@yourdomain.com",
+  to: "customer@example.com",
+  subject: "Your invoice",
+  html: "<p>See attached.</p>",
+  attachments: [
+    {
+      filename: "invoice.pdf",
+      content: fs.readFileSync("invoice.pdf").toString("base64"),
+    },
+  ],
+});
+
+// URL (fetched server-side)
+const { data, error } = await pigeon.send({
+  from: "reports@yourdomain.com",
+  to: "customer@example.com",
+  subject: "Your report",
+  html: "<p>See attached.</p>",
+  attachments: [
+    {
+      filename: "report.pdf",
+      path: "https://example.com/reports/123.pdf",
+    },
+  ],
+});
+```
+
+Limits: 7MB per file, 25MB total. HTTPS only for URLs. Executables (.exe, .bat, etc.) are blocked.
+
 ## Templates
 
 Manage email templates programmatically:

@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.0
+
+- Attachments support: `content` (base64) or `path` (URL)
+- Limits: 7MB per file, 25MB total
+- Blocked extensions: .exe, .bat, .sh, .dll, etc.
+
 ## 1.0.0
 
 **BREAKING**: Result pattern for error handling
