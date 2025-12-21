@@ -181,6 +181,7 @@ describe("error handling", () => {
 		expect(data).toBeNull();
 		expect(error).toEqual({
 			message: "Invalid API key",
+			code: "api_error",
 			status: 401,
 		});
 	});
@@ -202,6 +203,7 @@ describe("error handling", () => {
 
 		expect(data).toBeNull();
 		expect(error?.message).toBe("Invalid email format");
+		expect(error?.code).toBe("api_error");
 		expect(error?.status).toBe(400);
 	});
 
@@ -222,6 +224,7 @@ describe("error handling", () => {
 
 		expect(data).toBeNull();
 		expect(error?.message).toBe("Request failed: 500");
+		expect(error?.code).toBe("api_error");
 		expect(error?.status).toBe(500);
 	});
 
@@ -238,7 +241,8 @@ describe("error handling", () => {
 
 		expect(data).toBeNull();
 		expect(error?.message).toBe("Network error");
-		expect(error?.status).toBe(0);
+		expect(error?.code).toBe("network_error");
+		expect(error?.status).toBeUndefined();
 	});
 });
 
@@ -389,6 +393,7 @@ describe("templates", () => {
 		expect(data).toBeNull();
 		expect(error).toEqual({
 			message: "Template not found",
+			code: "api_error",
 			status: 404,
 		});
 	});

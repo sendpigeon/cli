@@ -6,7 +6,7 @@
 
 - All methods return `{ data, error }` instead of throwing
 - No try/catch needed, TypeScript narrows types on error check
-- Network errors caught with `status: 0`
+- Error has `code: "api_error" | "network_error"` and optional `status`
 
 ## 0.3.0
 

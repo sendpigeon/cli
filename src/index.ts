@@ -69,7 +69,8 @@ export type SendPigeonOptions = {
 
 export type SendPigeonError = {
 	message: string;
-	status: number;
+	code: "network_error" | "api_error";
+	status?: number;
 };
 
 export type Result<T> =
@@ -106,7 +107,10 @@ async function request<T>(
 
 		if (!response.ok) {
 			const message = await parseErrorMessage(response);
-			return { data: null, error: { message, status: response.status } };
+			return {
+				data: null,
+				error: { message, code: "api_error", status: response.status },
+			};
 		}
 
 		if (response.status === 204) {
@@ -120,7 +124,7 @@ async function request<T>(
 			data: null,
 			error: {
 				message: err instanceof Error ? err.message : "Unknown error",
-				status: 0,
+				code: "network_error",
 			},
 		};
 	}

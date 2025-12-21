@@ -24,7 +24,8 @@ const { data, error } = await pigeon.send({
 
 if (error) {
   console.log(error.message); // "Domain not verified"
-  console.log(error.status);  // 403
+  console.log(error.code);    // "api_error" | "network_error"
+  console.log(error.status);  // 403 (only for api_error)
   return;
 }
 
