@@ -1,5 +1,6 @@
+import { createHmac } from "node:crypto";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { SendPigeon, type Template } from "./index.js";
+import { SendPigeon, verifyWebhook, type Template } from "./index.js";
 
 describe("SendPigeon", () => {
 	it("has send method", () => {
@@ -397,5 +398,207 @@ describe("templates", () => {
 			code: "api_error",
 			status: 404,
 		});
+	});
+});
+
+describe("emails.get", () => {
+	const mockFetch = vi.fn();
+
+	beforeEach(() => {
+		vi.stubGlobal("fetch", mockFetch);
+	});
+
+	afterEach(() => {
+		vi.unstubAllGlobals();
+		mockFetch.mockReset();
+	});
+
+	it("makes GET to /v1/emails/{id}", async () => {
+		mockFetch.mockResolvedValueOnce({
+			ok: true,
+			status: 200,
+			json: () =>
+				Promise.resolve({
+					id: "em_abc123",
+					status: "delivered",
+					fromAddress: "test@example.com",
+					toAddress: "recipient@example.com",
+					subject: "Test",
+					tags: ["order"],
+					metadata: { orderId: "123" },
+					createdAt: "2024-01-15T10:00:00Z",
+					sentAt: "2024-01-15T10:00:01Z",
+					deliveredAt: "2024-01-15T10:00:02Z",
+					bouncedAt: null,
+					complainedAt: null,
+					bounceType: null,
+					complaintType: null,
+					ccAddress: null,
+					bccAddress: null,
+					attachments: null,
+					hasBody: true,
+				}),
+		});
+
+		const client = new SendPigeon("test-key");
+		const { data, error } = await client.emails.get("em_abc123");
+
+		expect(mockFetch).toHaveBeenCalledWith(
+			"https://api.sendpigeon.dev/v1/emails/em_abc123",
+			expect.objectContaining({ method: "GET" }),
+		);
+		expect(error).toBeNull();
+		expect(data?.status).toBe("delivered");
+		expect(data?.tags).toEqual(["order"]);
+		expect(data?.metadata).toEqual({ orderId: "123" });
+	});
+
+	it("returns error for 404", async () => {
+		mockFetch.mockResolvedValueOnce({
+			ok: false,
+			status: 404,
+			json: () => Promise.resolve({ message: "Email not found", code: "NOT_FOUND" }),
+		});
+
+		const client = new SendPigeon("test-key");
+		const { data, error } = await client.emails.get("nonexistent");
+
+		expect(data).toBeNull();
+		expect(error?.code).toBe("api_error");
+		expect(error?.apiCode).toBe("NOT_FOUND");
+		expect(error?.status).toBe(404);
+	});
+});
+
+describe("apiCode error handling", () => {
+	const mockFetch = vi.fn();
+
+	beforeEach(() => {
+		vi.stubGlobal("fetch", mockFetch);
+	});
+
+	afterEach(() => {
+		vi.unstubAllGlobals();
+		mockFetch.mockReset();
+	});
+
+	it("returns apiCode from API response", async () => {
+		mockFetch.mockResolvedValueOnce({
+			ok: false,
+			status: 402,
+			json: () =>
+				Promise.resolve({
+					message: "Quota exceeded",
+					code: "QUOTA_EXCEEDED",
+				}),
+		});
+
+		const client = new SendPigeon("test-key");
+		const { error } = await client.send({
+			from: "test@example.com",
+			to: "recipient@example.com",
+			subject: "Test",
+			html: "<p>Hello</p>",
+		});
+
+		expect(error?.code).toBe("api_error");
+		expect(error?.apiCode).toBe("QUOTA_EXCEEDED");
+		expect(error?.status).toBe(402);
+	});
+});
+
+describe("verifyWebhook", () => {
+	const secret = "whsec_test123";
+
+	function sign(payload: string, ts: number): string {
+		return createHmac("sha256", secret)
+			.update(`${ts}.${payload}`)
+			.digest("hex");
+	}
+
+	it("returns valid for correct signature", async () => {
+		const payload = JSON.stringify({
+			event: "email.delivered",
+			timestamp: new Date().toISOString(),
+			data: { emailId: "em_123" },
+		});
+		const ts = Math.floor(Date.now() / 1000);
+		const sig = sign(payload, ts);
+
+		const result = await verifyWebhook({
+			payload,
+			signature: sig,
+			timestamp: String(ts),
+			secret,
+		});
+
+		expect(result.valid).toBe(true);
+		if (result.valid) {
+			expect(result.payload.event).toBe("email.delivered");
+		}
+	});
+
+	it("rejects expired timestamp", async () => {
+		const payload = "{}";
+		const ts = Math.floor(Date.now() / 1000) - 400;
+		const sig = sign(payload, ts);
+
+		const result = await verifyWebhook({
+			payload,
+			signature: sig,
+			timestamp: String(ts),
+			secret,
+		});
+
+		expect(result.valid).toBe(false);
+		if (!result.valid) {
+			expect(result.error).toBe("Timestamp expired");
+		}
+	});
+
+	it("rejects invalid signature", async () => {
+		const payload = "{}";
+		const ts = Math.floor(Date.now() / 1000);
+
+		const result = await verifyWebhook({
+			payload,
+			signature: "invalidsignature",
+			timestamp: String(ts),
+			secret,
+		});
+
+		expect(result.valid).toBe(false);
+	});
+
+	it("rejects invalid timestamp", async () => {
+		const result = await verifyWebhook({
+			payload: "{}",
+			signature: "abc123",
+			timestamp: "not-a-number",
+			secret,
+		});
+
+		expect(result.valid).toBe(false);
+		if (!result.valid) {
+			expect(result.error).toBe("Invalid timestamp");
+		}
+	});
+
+	it("rejects invalid JSON payload", async () => {
+		const payload = "not json";
+		const ts = Math.floor(Date.now() / 1000);
+		const sig = sign(payload, ts);
+
+		const result = await verifyWebhook({
+			payload,
+			signature: sig,
+			timestamp: String(ts),
+			secret,
+		});
+
+		expect(result.valid).toBe(false);
+		if (!result.valid) {
+			expect(result.error).toBe("Invalid payload JSON");
+		}
 	});
 });

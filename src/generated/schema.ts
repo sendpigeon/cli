@@ -1344,6 +1344,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/emails/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get email details
+         * @description Get the details and delivery status of an email by ID.
+         */
+        get: operations["getEmail"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/emails/{id}/schedule": {
         parameters: {
             query?: never;
@@ -1359,6 +1379,56 @@ export interface paths {
          * @description Cancel a scheduled email before it is sent.
          */
         delete: operations["cancelScheduledEmail"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/invitations/pending": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description List of pending invitations for the authenticated user */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            invitations: {
+                                id: string;
+                                organizationId: string;
+                                organizationName: string;
+                                role: string;
+                                expiresAt: string;
+                            }[];
+                        };
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -2083,6 +2153,34 @@ export interface components {
             /** @description File attachments. Provide content (base64) or path (URL). */
             attachments?: components["schemas"]["AttachmentInput"][];
             /**
+             * @description Tags for filtering and analytics. Max 5 tags, 50 chars each.
+             * @example [
+             *       "order",
+             *       "confirmation"
+             *     ]
+             */
+            tags?: string[];
+            /**
+             * @description Custom key-value pairs. Returned in webhooks and logs. Max 500 chars per value.
+             * @example {
+             *       "orderId": "12345",
+             *       "userId": "abc"
+             *     }
+             */
+            metadata?: {
+                [key: string]: string;
+            };
+            /**
+             * @description Custom email headers. Use for X-Priority, List-Unsubscribe, etc.
+             * @example {
+             *       "X-Priority": "1",
+             *       "List-Unsubscribe": "<mailto:unsub@example.com>"
+             *     }
+             */
+            headers?: {
+                [key: string]: string;
+            };
+            /**
              * Format: date-time
              * @description ISO 8601 datetime to send email. Max 30 days ahead. Omit to send immediately.
              * @example 2024-01-15T10:00:00Z
@@ -2143,6 +2241,13 @@ export interface components {
                 [key: string]: string;
             };
             attachments?: components["schemas"]["AttachmentInput"][];
+            tags?: string[];
+            metadata?: {
+                [key: string]: string;
+            };
+            headers?: {
+                [key: string]: string;
+            };
             /** @description Unique key to prevent duplicate sends for this email. */
             idempotencyKey?: string;
             /**
@@ -2155,6 +2260,38 @@ export interface components {
         SendBatchEmailRequest: {
             /** @description Array of emails to send (1-100) */
             emails: components["schemas"]["BatchEmailEntry"][];
+        };
+        EmailDetailResponse: {
+            /** @example em_abc123 */
+            id: string;
+            /** @example hello@yourdomain.com */
+            fromAddress: string;
+            /** @example user@example.com */
+            toAddress: string;
+            ccAddress: string | null;
+            bccAddress: string | null;
+            /** @example Welcome to Acme! */
+            subject: string;
+            /** @enum {string} */
+            status: "scheduled" | "cancelled" | "pending" | "sent" | "delivered" | "bounced" | "complained" | "failed";
+            tags: string[];
+            metadata: {
+                [key: string]: string;
+            } | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            sentAt: string | null;
+            /** Format: date-time */
+            deliveredAt: string | null;
+            /** Format: date-time */
+            bouncedAt: string | null;
+            /** Format: date-time */
+            complainedAt: string | null;
+            bounceType: string | null;
+            complaintType: string | null;
+            attachments: components["schemas"]["AttachmentMeta"][] | null;
+            hasBody: boolean;
         };
     };
     responses: never;
@@ -2480,6 +2617,46 @@ export interface operations {
             };
             /** @description Internal server error */
             500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    getEmail: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Email details */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EmailDetailResponse"];
+                };
+            };
+            /** @description Missing or invalid API key */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Email not found */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };

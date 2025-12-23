@@ -23,13 +23,46 @@ const { data, error } = await pigeon.send({
 });
 
 if (error) {
-  console.log(error.message); // "Domain not verified"
-  console.log(error.code);    // "api_error" | "network_error"
-  console.log(error.status);  // 403 (only for api_error)
+  console.log(error.message); // "Quota exceeded"
+  console.log(error.code);    // "api_error" | "network_error" | "timeout_error"
+  console.log(error.apiCode); // "QUOTA_EXCEEDED" (API-specific code)
+  console.log(error.status);  // 402
   return;
 }
 
 console.log(data.id); // "email_abc123"
+```
+
+### With tags and metadata
+
+Track and filter emails with tags and metadata:
+
+```typescript
+const { data } = await pigeon.send({
+  from: "hello@yourdomain.com",
+  to: "user@example.com",
+  subject: "Order confirmed",
+  html: "<p>Your order is confirmed.</p>",
+  tags: ["order", "confirmation"],
+  metadata: { orderId: "12345", userId: "abc" },
+});
+```
+
+Tags and metadata are returned in webhooks and when fetching email details.
+
+### With custom headers
+
+```typescript
+const { data } = await pigeon.send({
+  from: "hello@yourdomain.com",
+  to: "user@example.com",
+  subject: "Important update",
+  html: "<p>Please read.</p>",
+  headers: {
+    "X-Priority": "1",
+    "List-Unsubscribe": "<mailto:unsub@yourdomain.com>",
+  },
+});
 ```
 
 ### With template
@@ -79,6 +112,20 @@ const { data, error } = await pigeon.send({
 
 Limits: 7MB per file, 25MB total. HTTPS only for URLs. Executables (.exe, .bat, etc.) are blocked.
 
+## Get email status
+
+Check delivery status of a sent email:
+
+```typescript
+const { data, error } = await pigeon.emails.get("email_abc123");
+
+if (data) {
+  console.log(data.status);   // "delivered" | "bounced" | "complained" | ...
+  console.log(data.tags);     // ["order", "confirmation"]
+  console.log(data.metadata); // { orderId: "12345" }
+}
+```
+
 ## Batch sending
 
 Send up to 100 emails in a single request. Each email is processed independently - some may succeed while others fail.
@@ -90,12 +137,14 @@ const { data, error } = await pigeon.sendBatch([
     to: "user1@example.com",
     subject: "Hello User 1",
     html: "<p>Welcome!</p>",
+    tags: ["welcome"],
   },
   {
     from: "hello@yourdomain.com",
     to: "user2@example.com",
     subject: "Hello User 2",
     html: "<p>Welcome!</p>",
+    tags: ["welcome"],
   },
 ]);
 
@@ -115,39 +164,6 @@ for (const result of data.data) {
     console.log(`Email ${result.index} failed: ${result.error.code}`);
   }
 }
-```
-
-### With templates
-
-```typescript
-const { data } = await pigeon.sendBatch([
-  {
-    from: "hello@yourdomain.com",
-    to: "user1@example.com",
-    templateId: "welcome",
-    variables: { name: "Alice" },
-  },
-  {
-    from: "hello@yourdomain.com",
-    to: "user2@example.com",
-    templateId: "welcome",
-    variables: { name: "Bob" },
-  },
-]);
-```
-
-### With per-email idempotency
-
-```typescript
-const { data } = await pigeon.sendBatch([
-  {
-    from: "hello@yourdomain.com",
-    to: "user@example.com",
-    subject: "Order confirmed",
-    html: "<p>Your order is confirmed.</p>",
-    idempotencyKey: "order-123-confirmation",
-  },
-]);
 ```
 
 ## Scheduling
@@ -170,20 +186,6 @@ console.log(data.id); // Use this ID to cancel if needed
 
 ```typescript
 const { error } = await pigeon.emails.cancel("email_abc123");
-```
-
-### Batch scheduling
-
-```typescript
-const { data } = await pigeon.sendBatch([
-  {
-    from: "hello@yourdomain.com",
-    to: "user@example.com",
-    subject: "Scheduled message",
-    html: "<p>This will arrive later.</p>",
-    scheduled_at: "2025-01-15T09:00:00Z",
-  },
-]);
 ```
 
 ## Templates
@@ -216,12 +218,69 @@ await pigeon.templates.delete("tpl_abc123");
 
 Template names must be lowercase alphanumeric with dashes (e.g., `welcome-email`). Variables use `{{variableName}}` syntax and are auto-detected from subject/html/text.
 
+## Webhook verification
+
+Verify webhook signatures in your endpoint:
+
+```typescript
+import { verifyWebhook } from "sendpigeon";
+
+app.post("/webhook", async (req, res) => {
+  const result = await verifyWebhook({
+    payload: req.body, // raw body string
+    signature: req.headers["x-webhook-signature"],
+    timestamp: req.headers["x-webhook-timestamp"],
+    secret: process.env.WEBHOOK_SECRET,
+  });
+
+  if (!result.valid) {
+    return res.status(400).json({ error: result.error });
+  }
+
+  const { event, data } = result.payload;
+
+  switch (event) {
+    case "email.delivered":
+      console.log(`Email ${data.emailId} delivered to ${data.toAddress}`);
+      break;
+    case "email.bounced":
+      console.log(`Email ${data.emailId} bounced: ${data.bounceType}`);
+      break;
+    case "email.complained":
+      console.log(`Email ${data.emailId} marked as spam`);
+      break;
+  }
+
+  res.sendStatus(200);
+});
+```
+
 ## Configuration
 
 ```typescript
 const pigeon = new SendPigeon("your-api-key", {
   baseUrl: "https://api.sendpigeon.dev", // optional
+  timeout: 30000, // request timeout in ms (default: 30s)
 });
+```
+
+## Error codes
+
+The SDK returns specific error codes from the API:
+
+| apiCode | Meaning |
+|---------|---------|
+| `QUOTA_EXCEEDED` | Monthly email limit reached |
+| `DOMAIN_NOT_VERIFIED` | Domain needs DNS verification |
+| `SENDING_DISABLED` | Account disabled due to high bounce/complaint rate |
+| `TEMPLATE_NOT_FOUND` | Template ID doesn't exist |
+| `MISSING_VARIABLES` | Template variables not provided |
+| `NOT_FOUND` | Resource not found |
+
+```typescript
+if (error?.apiCode === "QUOTA_EXCEEDED") {
+  // Prompt user to upgrade plan
+}
 ```
 
 ## License

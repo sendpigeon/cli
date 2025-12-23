@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.4.0
+
+- Request timeout option (default 30s)
+- `apiCode` in error responses (e.g. QUOTA_EXCEEDED, DOMAIN_NOT_VERIFIED)
+- Export `EmailDetail`, `AttachmentMeta`, `EmailStatus` types
+
+## 1.3.0
+
+- Scheduling: `scheduled_at` param + `emails.cancel()`
+- Batch sending: `emails.sendBatch()`
+
 ## 1.2.0
 
 - Domains API: list, create, get, verify, delete
