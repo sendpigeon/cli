@@ -4,9 +4,26 @@ const DEFAULT_BASE_URL = "https://api.sendpigeon.dev";
 
 type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
-// Re-export generated types with friendly names
-export type SendEmailRequest = components["schemas"]["SendEmailRequest"];
-export type SendEmailResponse = components["schemas"]["SendEmailResponse"];
+// Internal API types (snake_case)
+type ApiSendEmailRequest = components["schemas"]["SendEmailRequest"];
+type ApiSendEmailResponse = components["schemas"]["SendEmailResponse"];
+type ApiBatchEmailEntry = components["schemas"]["BatchEmailEntry"];
+
+// Public SDK types (camelCase)
+export type SendEmailRequest = Omit<ApiSendEmailRequest, "scheduled_at"> & {
+	/** ISO 8601 datetime to send. Max 30 days ahead. */
+	scheduledAt?: string;
+};
+
+export type SendEmailResponse = Omit<ApiSendEmailResponse, "scheduled_at"> & {
+	/** Scheduled send time (only if scheduled) */
+	scheduledAt?: string;
+};
+
+export type BatchEmail = Omit<ApiBatchEmailEntry, "scheduled_at"> & {
+	/** ISO 8601 datetime to send. Max 30 days ahead. */
+	scheduledAt?: string;
+};
 export type Template = components["schemas"]["Template"];
 export type CreateTemplateRequest = components["schemas"]["CreateTemplateRequest"];
 export type UpdateTemplateRequest = components["schemas"]["UpdateTemplateRequest"];
@@ -45,7 +62,6 @@ export type CreateApiKeyOptions = {
 };
 
 // Batch email types
-export type BatchEmail = components["schemas"]["BatchEmailEntry"];
 export type BatchEmailResult = components["schemas"]["BatchEmailResult"];
 export type SendBatchResponse = components["schemas"]["SendBatchEmailResponse"];
 
@@ -63,6 +79,10 @@ export type SendPigeonOptions = {
 	baseUrl?: string;
 	/** Request timeout in milliseconds (default: 30000) */
 	timeout?: number;
+	/** Max retries on 429/5xx errors (default: 2, max: 5). Set to 0 to disable. */
+	maxRetries?: number;
+	/** Log requests and responses to console (default: false) */
+	debug?: boolean;
 };
 
 export type SendPigeonError = {
@@ -99,61 +119,133 @@ type RequestOptions = {
 	body?: unknown;
 	headers?: Record<string, string>;
 	timeout: number;
+	maxRetries: number;
+	debug: boolean;
 };
 
-async function request<T>(opts: RequestOptions): Promise<Result<T>> {
-	const controller = new AbortController();
-	const timeoutId = setTimeout(() => controller.abort(), opts.timeout);
+function sleep(ms: number): Promise<void> {
+	return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
-	try {
-		const response = await fetch(`${opts.baseUrl}${opts.path}`, {
-			method: opts.method,
-			headers: {
-				"Content-Type": "application/json",
-				Authorization: `Bearer ${opts.apiKey}`,
-				...opts.headers,
-			},
-			body: opts.body ? JSON.stringify(opts.body) : undefined,
-			signal: controller.signal,
-		});
+function shouldRetry(status: number): boolean {
+	return status === 429 || status >= 500;
+}
 
-		clearTimeout(timeoutId);
-
-		if (!response.ok) {
-			const { message, apiCode } = await parseError(response);
-			return {
-				data: null,
-				error: { message, code: "api_error", apiCode, status: response.status },
-			};
-		}
-
-		if (response.status === 204) {
-			return { data: undefined as T, error: null };
-		}
-
-		const data = (await response.json()) as T;
-		return { data, error: null };
-	} catch (err) {
-		clearTimeout(timeoutId);
-
-		if (err instanceof Error && err.name === "AbortError") {
-			return {
-				data: null,
-				error: { message: "Request timed out", code: "timeout_error" },
-			};
-		}
-
-		return {
-			data: null,
-			error: {
-				message: err instanceof Error ? err.message : "Unknown error",
-				code: "network_error",
-			},
-		};
+function getRetryDelay(attempt: number, retryAfter?: string): number {
+	if (retryAfter) {
+		const seconds = parseInt(retryAfter, 10);
+		if (!isNaN(seconds)) return seconds * 1000;
 	}
+	// Exponential backoff: 500ms, 1s, 2s, 4s, 8s
+	return Math.min(500 * Math.pow(2, attempt), 8000);
+}
+
+async function request<T>(opts: RequestOptions): Promise<Result<T>> {
+	const { maxRetries, debug } = opts;
+	let lastError: SendPigeonError | null = null;
+
+	for (let attempt = 0; attempt <= maxRetries; attempt++) {
+		const controller = new AbortController();
+		const timeoutId = setTimeout(() => controller.abort(), opts.timeout);
+
+		if (debug) {
+			console.log(`[sendpigeon] ${opts.method} ${opts.path}${attempt > 0 ? ` (retry ${attempt})` : ""}`);
+			if (opts.body) console.log("[sendpigeon] body:", JSON.stringify(opts.body, null, 2));
+		}
+
+		try {
+			const response = await fetch(`${opts.baseUrl}${opts.path}`, {
+				method: opts.method,
+				headers: {
+					"Content-Type": "application/json",
+					Authorization: `Bearer ${opts.apiKey}`,
+					...opts.headers,
+				},
+				body: opts.body ? JSON.stringify(opts.body) : undefined,
+				signal: controller.signal,
+			});
+
+			clearTimeout(timeoutId);
+
+			if (debug) {
+				console.log(`[sendpigeon] ${response.status} ${response.statusText}`);
+			}
+
+			if (!response.ok) {
+				const { message, apiCode } = await parseError(response);
+				lastError = { message, code: "api_error", apiCode, status: response.status };
+
+				if (shouldRetry(response.status) && attempt < maxRetries) {
+					const delay = getRetryDelay(attempt, response.headers.get("retry-after") ?? undefined);
+					if (debug) console.log(`[sendpigeon] retrying in ${delay}ms...`);
+					await sleep(delay);
+					continue;
+				}
+
+				return { data: null, error: lastError };
+			}
+
+			if (response.status === 204) {
+				return { data: undefined as T, error: null };
+			}
+
+			const data = (await response.json()) as T;
+			if (debug) console.log("[sendpigeon] response:", JSON.stringify(data, null, 2));
+			return { data, error: null };
+		} catch (err) {
+			clearTimeout(timeoutId);
+
+			if (err instanceof Error && err.name === "AbortError") {
+				lastError = { message: "Request timed out", code: "timeout_error" };
+			} else {
+				lastError = {
+					message: err instanceof Error ? err.message : "Unknown error",
+					code: "network_error",
+				};
+			}
+
+			// Retry on network errors too
+			if (attempt < maxRetries) {
+				const delay = getRetryDelay(attempt);
+				if (debug) console.log(`[sendpigeon] ${lastError.message}, retrying in ${delay}ms...`);
+				await sleep(delay);
+				continue;
+			}
+		}
+	}
+
+	return { data: null, error: lastError! };
 }
 
 const DEFAULT_TIMEOUT = 30000;
+const DEFAULT_MAX_RETRIES = 2;
+const MAX_RETRIES_LIMIT = 5;
+
+// Transform SDK request (camelCase) to API request (snake_case)
+function toApiRequest(
+	email: SendEmailRequest,
+): ApiSendEmailRequest {
+	const { scheduledAt, ...rest } = email;
+	return scheduledAt ? { ...rest, scheduled_at: scheduledAt } : rest;
+}
+
+// Transform API response (snake_case) to SDK response (camelCase)
+function fromApiResponse(
+	response: ApiSendEmailResponse,
+): SendEmailResponse {
+	const { scheduled_at, ...rest } = response;
+	return scheduled_at ? { ...rest, scheduledAt: scheduled_at } : rest;
+}
+
+// Transform batch emails
+function toApiBatchRequest(
+	emails: BatchEmail[],
+): ApiBatchEmailEntry[] {
+	return emails.map((email) => {
+		const { scheduledAt, ...rest } = email;
+		return scheduledAt ? { ...rest, scheduled_at: scheduledAt } : rest;
+	});
+}
 
 type SimpleRequestOptions = {
 	method: HttpMethod;
@@ -166,12 +258,16 @@ export class SendPigeon {
 	private readonly apiKey: string;
 	private readonly baseUrl: string;
 	private readonly timeout: number;
+	private readonly maxRetries: number;
+	private readonly debug: boolean;
 
 	private _request<T>(opts: SimpleRequestOptions): Promise<Result<T>> {
 		return request<T>({
 			baseUrl: this.baseUrl,
 			apiKey: this.apiKey,
 			timeout: this.timeout,
+			maxRetries: this.maxRetries,
+			debug: this.debug,
 			...opts,
 		});
 	}
@@ -212,6 +308,8 @@ export class SendPigeon {
 		this.apiKey = apiKey;
 		this.baseUrl = options?.baseUrl ?? DEFAULT_BASE_URL;
 		this.timeout = options?.timeout ?? DEFAULT_TIMEOUT;
+		this.maxRetries = Math.min(options?.maxRetries ?? DEFAULT_MAX_RETRIES, MAX_RETRIES_LIMIT);
+		this.debug = options?.debug ?? false;
 
 		this.templates = {
 			list: () => this._request<Template[]>({ method: "GET", path: "/v1/templates" }),
@@ -241,22 +339,32 @@ export class SendPigeon {
 		};
 	}
 
-	send(email: SendEmailRequest, options?: SendEmailOptions): Promise<Result<SendEmailResponse>> {
-		return this._request<SendEmailResponse>({
+	async send(email: SendEmailRequest, options?: SendEmailOptions): Promise<Result<SendEmailResponse>> {
+		const result = await this._request<ApiSendEmailResponse>({
 			method: "POST",
 			path: "/v1/emails",
-			body: email,
+			body: toApiRequest(email),
 			headers: options?.idempotencyKey ? { "idempotency-key": options.idempotencyKey } : undefined,
 		});
+
+		if (result.error) {
+			return { data: null, error: result.error };
+		}
+
+		return { data: fromApiResponse(result.data), error: null };
 	}
 
 	/** Send up to 100 emails in a single request. Returns per-email status. */
 	sendBatch(emails: BatchEmail[]): Promise<Result<SendBatchResponse>> {
-		return this._request<SendBatchResponse>({ method: "POST", path: "/v1/emails/batch", body: { emails } });
+		return this._request<SendBatchResponse>({
+			method: "POST",
+			path: "/v1/emails/batch",
+			body: { emails: toApiBatchRequest(emails) },
+		});
 	}
 }
 
-// Webhook types
+// Outbound webhook types
 export type WebhookEvent =
 	| "email.delivered"
 	| "email.bounced"
@@ -276,6 +384,33 @@ export type WebhookPayload = {
 	event: WebhookEvent;
 	timestamp: string;
 	data: WebhookPayloadData;
+};
+
+// Inbound webhook types
+export type InboundAttachment = {
+	filename: string;
+	contentType: string;
+	size: number;
+	/** Presigned URL (expires after 1 hour) */
+	url: string;
+};
+
+export type InboundEmailData = {
+	id: string;
+	from: string;
+	to: string;
+	subject: string;
+	text: string | null;
+	html: string | null;
+	attachments: InboundAttachment[];
+	/** Presigned URL to raw email (expires after 1 hour) */
+	rawUrl: string;
+};
+
+export type InboundEmailEvent = {
+	event: "email.received";
+	timestamp: string;
+	data: InboundEmailData;
 };
 
 export type WebhookVerifyOptions = {
@@ -365,6 +500,103 @@ export async function verifyWebhook(
 
 	try {
 		const parsed = JSON.parse(payload) as WebhookPayload;
+		return { valid: true, payload: parsed };
+	} catch {
+		return { valid: false, error: "Invalid payload JSON" };
+	}
+}
+
+export type InboundWebhookVerifyOptions = {
+	/** Raw request body as string */
+	payload: string;
+	/** X-Webhook-Signature header value */
+	signature: string;
+	/** X-Webhook-Timestamp header value */
+	timestamp: string;
+	/** Inbound webhook secret */
+	secret: string;
+	/** Max age in seconds (default: 300) */
+	maxAge?: number;
+};
+
+export type InboundWebhookVerifyResult =
+	| { valid: true; payload: InboundEmailEvent }
+	| { valid: false; error: string };
+
+/**
+ * Verify an inbound email webhook signature.
+ * Use this in your webhook endpoint to receive incoming emails.
+ * Requires Node.js runtime (uses node:crypto).
+ *
+ * @example
+ * ```ts
+ * import { verifyInboundWebhook } from "sendpigeon";
+ *
+ * app.post("/inbound", async (req, res) => {
+ *   const result = await verifyInboundWebhook({
+ *     payload: req.body,
+ *     signature: req.headers["x-webhook-signature"],
+ *     timestamp: req.headers["x-webhook-timestamp"],
+ *     secret: process.env.INBOUND_WEBHOOK_SECRET,
+ *   });
+ *
+ *   if (!result.valid) {
+ *     return res.status(400).json({ error: result.error });
+ *   }
+ *
+ *   const { from, to, subject, text, html, attachments } = result.payload.data;
+ *   console.log(`Email from ${from}: ${subject}`);
+ *
+ *   res.status(200).json({ received: true });
+ * });
+ * ```
+ */
+export async function verifyInboundWebhook(
+	options: InboundWebhookVerifyOptions,
+): Promise<InboundWebhookVerifyResult> {
+	const { payload, signature, timestamp, secret, maxAge = WEBHOOK_MAX_AGE_SECONDS } = options;
+
+	const ts = parseInt(timestamp, 10);
+	if (isNaN(ts)) {
+		return { valid: false, error: "Invalid timestamp" };
+	}
+
+	const now = Math.floor(Date.now() / 1000);
+	const age = now - ts;
+
+	if (age > maxAge) {
+		return { valid: false, error: "Timestamp expired" };
+	}
+	if (age < -maxAge) {
+		return { valid: false, error: "Timestamp too far in future" };
+	}
+
+	const crypto = await import("node:crypto");
+	const expected = crypto
+		.createHmac("sha256", secret)
+		.update(`${ts}.${payload}`)
+		.digest("hex");
+
+	try {
+		const sigBuffer = Buffer.from(signature, "hex");
+		const expectedBuffer = Buffer.from(expected, "hex");
+
+		if (sigBuffer.length !== expectedBuffer.length) {
+			return { valid: false, error: "Invalid signature" };
+		}
+
+		if (!crypto.timingSafeEqual(sigBuffer, expectedBuffer)) {
+			return { valid: false, error: "Invalid signature" };
+		}
+	} catch {
+		return { valid: false, error: "Invalid signature format" };
+	}
+
+	try {
+		const parsed = JSON.parse(payload) as InboundEmailEvent;
+		if (parsed.event !== "email.received") {
+			return { valid: false, error: "Invalid event type" };
+		}
 		return { valid: true, payload: parsed };
 	} catch {
 		return { valid: false, error: "Invalid payload JSON" };

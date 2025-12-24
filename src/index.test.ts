@@ -215,7 +215,7 @@ describe("error handling", () => {
 			json: () => Promise.reject(new Error("Invalid JSON")),
 		});
 
-		const client = new SendPigeon("test-key");
+		const client = new SendPigeon("test-key", { maxRetries: 0 });
 		const { data, error } = await client.send({
 			from: "test@example.com",
 			to: "recipient@example.com",
@@ -232,7 +232,7 @@ describe("error handling", () => {
 	it("handles network errors", async () => {
 		mockFetch.mockRejectedValueOnce(new Error("Network error"));
 
-		const client = new SendPigeon("test-key");
+		const client = new SendPigeon("test-key", { maxRetries: 0 });
 		const { data, error } = await client.send({
 			from: "test@example.com",
 			to: "recipient@example.com",
@@ -244,6 +244,62 @@ describe("error handling", () => {
 		expect(error?.message).toBe("Network error");
 		expect(error?.code).toBe("network_error");
 		expect(error?.status).toBeUndefined();
+	});
+
+	it("retries on 429 and succeeds", async () => {
+		mockFetch
+			.mockResolvedValueOnce({
+				ok: false,
+				status: 429,
+				headers: new Map([["retry-after", "0"]]),
+				json: () => Promise.resolve({ message: "Rate limited" }),
+			})
+			.mockResolvedValueOnce({
+				ok: true,
+				status: 200,
+				json: () => Promise.resolve({ id: "email_retry", status: "sent", suppressed: [] }),
+			});
+
+		const client = new SendPigeon("test-key", { maxRetries: 1 });
+		const { data, error } = await client.send({
+			from: "test@example.com",
+			to: "recipient@example.com",
+			subject: "Test",
+			html: "<p>Hello</p>",
+		});
+
+		expect(error).toBeNull();
+		expect(data?.id).toBe("email_retry");
+		expect(mockFetch).toHaveBeenCalledTimes(2);
+	});
+
+	it("retries on 5xx and eventually fails", async () => {
+		mockFetch
+			.mockResolvedValueOnce({
+				ok: false,
+				status: 500,
+				headers: new Map(),
+				json: () => Promise.resolve({ message: "Server error" }),
+			})
+			.mockResolvedValueOnce({
+				ok: false,
+				status: 500,
+				headers: new Map(),
+				json: () => Promise.resolve({ message: "Server error" }),
+			});
+
+		const client = new SendPigeon("test-key", { maxRetries: 1 });
+		const { data, error } = await client.send({
+			from: "test@example.com",
+			to: "recipient@example.com",
+			subject: "Test",
+			html: "<p>Hello</p>",
+		});
+
+		expect(data).toBeNull();
+		expect(error?.message).toBe("Server error");
+		expect(error?.status).toBe(500);
+		expect(mockFetch).toHaveBeenCalledTimes(2);
 	});
 });
 
