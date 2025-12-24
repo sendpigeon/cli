@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.5.0
+
+**BREAKING**: `verifyWebhook` and `verifyInboundWebhook` now return sync instead of Promise
+
+- Split webhooks into separate file (`src/webhooks.ts`)
+- DRY'd webhook verification logic
+- Removed redundant comments
+
 ## 1.4.0
 
 - Request timeout option (default 30s)

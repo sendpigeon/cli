@@ -572,7 +572,7 @@ describe("verifyWebhook", () => {
 			.digest("hex");
 	}
 
-	it("returns valid for correct signature", async () => {
+	it("returns valid for correct signature", () => {
 		const payload = JSON.stringify({
 			event: "email.delivered",
 			timestamp: new Date().toISOString(),
@@ -581,7 +581,7 @@ describe("verifyWebhook", () => {
 		const ts = Math.floor(Date.now() / 1000);
 		const sig = sign(payload, ts);
 
-		const result = await verifyWebhook({
+		const result = verifyWebhook({
 			payload,
 			signature: sig,
 			timestamp: String(ts),
@@ -594,12 +594,12 @@ describe("verifyWebhook", () => {
 		}
 	});
 
-	it("rejects expired timestamp", async () => {
+	it("rejects expired timestamp", () => {
 		const payload = "{}";
 		const ts = Math.floor(Date.now() / 1000) - 400;
 		const sig = sign(payload, ts);
 
-		const result = await verifyWebhook({
+		const result = verifyWebhook({
 			payload,
 			signature: sig,
 			timestamp: String(ts),
@@ -612,11 +612,11 @@ describe("verifyWebhook", () => {
 		}
 	});
 
-	it("rejects invalid signature", async () => {
+	it("rejects invalid signature", () => {
 		const payload = "{}";
 		const ts = Math.floor(Date.now() / 1000);
 
-		const result = await verifyWebhook({
+		const result = verifyWebhook({
 			payload,
 			signature: "invalidsignature",
 			timestamp: String(ts),
@@ -626,8 +626,8 @@ describe("verifyWebhook", () => {
 		expect(result.valid).toBe(false);
 	});
 
-	it("rejects invalid timestamp", async () => {
-		const result = await verifyWebhook({
+	it("rejects invalid timestamp", () => {
+		const result = verifyWebhook({
 			payload: "{}",
 			signature: "abc123",
 			timestamp: "not-a-number",
@@ -640,12 +640,12 @@ describe("verifyWebhook", () => {
 		}
 	});
 
-	it("rejects invalid JSON payload", async () => {
+	it("rejects invalid JSON payload", () => {
 		const payload = "not json";
 		const ts = Math.floor(Date.now() / 1000);
 		const sig = sign(payload, ts);
 
-		const result = await verifyWebhook({
+		const result = verifyWebhook({
 			payload,
 			signature: sig,
 			timestamp: String(ts),
