@@ -3,9 +3,23 @@ import type { components } from "./generated/schema.js";
 export * from "./webhooks.js";
 
 const DEFAULT_BASE_URL = "https://api.sendpigeon.dev";
+const DEV_BASE_URL = "http://localhost:4100";
 const DEFAULT_TIMEOUT = 30000;
 const DEFAULT_MAX_RETRIES = 2;
 const MAX_RETRIES_LIMIT = 5;
+
+function resolveBaseUrl(baseUrl?: string): { url: string; isDevMode: boolean } {
+	// 1. Explicit override wins
+	if (baseUrl) return { url: baseUrl, isDevMode: false };
+
+	// 2. Env var for dev mode (sendpigeon-dev server)
+	if (process.env.SENDPIGEON_DEV === "true") {
+		return { url: DEV_BASE_URL, isDevMode: true };
+	}
+
+	// 3. Production default
+	return { url: DEFAULT_BASE_URL, isDevMode: false };
+}
 
 type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
@@ -59,6 +73,24 @@ export type SendBatchResponse = components["schemas"]["SendBatchEmailResponse"];
 export type EmailDetail = components["schemas"]["EmailDetailResponse"];
 export type AttachmentMeta = components["schemas"]["AttachmentMeta"];
 export type EmailStatus = EmailDetail["status"];
+
+export type Suppression = {
+	id: string;
+	email: string;
+	reason: string;
+	sourceEmailId: string | null;
+	createdAt: string;
+};
+
+export type SuppressionListResponse = {
+	data: Suppression[];
+	total: number;
+};
+
+export type ListSuppressionsOptions = {
+	limit?: number;
+	offset?: number;
+};
 
 export type SendEmailOptions = {
 	idempotencyKey?: string;
@@ -271,12 +303,22 @@ export class SendPigeon {
 		cancel: (id: string) => Promise<Result<void>>;
 	};
 
+	readonly suppressions: {
+		list: (options?: ListSuppressionsOptions) => Promise<Result<SuppressionListResponse>>;
+		delete: (email: string) => Promise<Result<void>>;
+	};
+
 	constructor(apiKey: string, options?: SendPigeonOptions) {
 		this.apiKey = apiKey;
-		this.baseUrl = options?.baseUrl ?? DEFAULT_BASE_URL;
+		const { url, isDevMode } = resolveBaseUrl(options?.baseUrl);
+		this.baseUrl = url;
 		this.timeout = options?.timeout ?? DEFAULT_TIMEOUT;
 		this.maxRetries = Math.min(options?.maxRetries ?? DEFAULT_MAX_RETRIES, MAX_RETRIES_LIMIT);
 		this.debug = options?.debug ?? false;
+
+		if (isDevMode) {
+			console.log("\x1b[35m[SendPigeon]\x1b[0m Dev mode → http://localhost:4100");
+		}
 
 		this.templates = {
 			list: () => this._request<Template[]>({ method: "GET", path: "/v1/templates" }),
@@ -303,6 +345,21 @@ export class SendPigeon {
 		this.emails = {
 			get: (id) => this._request<EmailDetail>({ method: "GET", path: `/v1/emails/${id}` }),
 			cancel: (id) => this._request<void>({ method: "DELETE", path: `/v1/emails/${id}/schedule` }),
+		};
+
+		this.suppressions = {
+			list: (opts) => {
+				const params = new URLSearchParams();
+				if (opts?.limit !== undefined) params.set("limit", String(opts.limit));
+				if (opts?.offset !== undefined) params.set("offset", String(opts.offset));
+				const query = params.toString();
+				return this._request<SuppressionListResponse>({
+					method: "GET",
+					path: `/v1/suppressions${query ? `?${query}` : ""}`,
+				});
+			},
+			delete: (email) =>
+				this._request<void>({ method: "DELETE", path: `/v1/suppressions/${encodeURIComponent(email)}` }),
 		};
 	}
 
