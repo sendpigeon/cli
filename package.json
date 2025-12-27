@@ -1,5 +1,5 @@
 {
-	"name": "@sendpigeon/sdk",
+	"name": "sendpigeon",
 	"version": "1.6.0",
 	"description": "Official Node.js SDK for SendPigeon email API",
 	"type": "module",
