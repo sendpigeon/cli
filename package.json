@@ -25,10 +25,10 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/sendpigeon/sdk-js.git"
+		"url": "https://github.com/sendpigeon/sendpigeon-node.git"
 	},
 	"homepage": "https://sendpigeon.dev/docs",
-	"bugs": "https://github.com/sendpigeon/sdk-js/issues",
+	"bugs": "https://github.com/sendpigeon/sendpigeon-node/issues",
 	"keywords": [
 		"email",
 		"transactional",
