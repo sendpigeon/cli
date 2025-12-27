@@ -317,7 +317,9 @@ export class SendPigeon {
 		this.debug = options?.debug ?? false;
 
 		if (isDevMode) {
-			console.log("\x1b[35m[SendPigeon]\x1b[0m Dev mode → http://localhost:4100");
+			const purple = "\x1b[35m";
+			const reset = "\x1b[0m";
+			console.log(`${purple}[SendPigeon]${reset} Dev mode → http://localhost:4100`);
 		}
 
 		this.templates = {

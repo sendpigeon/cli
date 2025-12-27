@@ -1,4 +1,368 @@
 export interface paths {
+    "/v1/alerts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listAlerts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/alerts/unread-count": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getUnreadAlertCount"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/alerts/{id}/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["markAlertAsRead"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/alerts/batch/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["markAllAlertsAsRead"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/alerts/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getAlertSettings"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["updateAlertSettings"];
+        trace?: never;
+    };
+    "/analytics/time-series": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    range?: "7d" | "30d" | "90d";
+                    domainId?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Time series data */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            range: string;
+                            data: {
+                                date: string;
+                                total: number;
+                                delivered: number;
+                                bounced: number;
+                                complained: number;
+                            }[];
+                        };
+                    };
+                };
+                /** @description Analytics not available on current plan */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            message: string;
+                            code: string;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/analytics/breakdown": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    range?: "7d" | "30d" | "90d";
+                    domainId?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Status breakdown */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            statuses: {
+                                status: string;
+                                count: number;
+                            }[];
+                            bounceTypes: {
+                                bounceType: string;
+                                count: number;
+                            }[];
+                            complaintTypes: {
+                                complaintType: string;
+                                count: number;
+                            }[];
+                        };
+                    };
+                };
+                /** @description Analytics not available on current plan */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            message: string;
+                            code: string;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/analytics/domains": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    range?: "7d" | "30d" | "90d";
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Per-domain analytics */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            domains: {
+                                domainId: string;
+                                domainName: string;
+                                sent: number;
+                                delivered: number;
+                                bounced: number;
+                                complained: number;
+                                deliveryRate: number;
+                                healthScore: number;
+                            }[];
+                        };
+                    };
+                };
+                /** @description Analytics not available on current plan */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            message: string;
+                            code: string;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/analytics/quick-stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    range?: "7d" | "30d" | "90d";
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Quick stats */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            topDomain: {
+                                name: string;
+                                count: number;
+                            } | null;
+                            busiestDay: {
+                                day: string;
+                                count: number;
+                            } | null;
+                            avgEmailsPerDay: number;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/analytics/latency": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    range?: "7d" | "30d" | "90d";
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Latency percentiles */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            p50: number | null;
+                            p95: number | null;
+                            min: number | null;
+                            max: number | null;
+                            count: number;
+                        };
+                    };
+                };
+                /** @description Analytics not available on current plan */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            message: string;
+                            code: string;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/health": {
         parameters: {
             query?: never;
@@ -32,48 +396,6 @@ export interface paths {
         };
         put?: never;
         post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/billing/webhook": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Webhook processed */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Invalid webhook */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-            };
-        };
         delete?: never;
         options?: never;
         head?: never;
@@ -298,6 +620,7 @@ export interface paths {
                                 processedAt: string;
                                 forwardedAt: string | null;
                                 webhookSentAt: string | null;
+                                slackSentAt: string | null;
                             }[];
                             nextCursor: string | null;
                         };
@@ -347,6 +670,7 @@ export interface paths {
                             processedAt: string;
                             forwardedAt: string | null;
                             webhookSentAt: string | null;
+                            slackSentAt: string | null;
                             rawUrl: string | null;
                         };
                     };
@@ -370,6 +694,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/inbound/emails/{id}/reply": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reply to inbound email
+         * @description Send a reply to an inbound email. Automatically sets threading headers (In-Reply-To, References) and quotes the original message.
+         */
+        post: operations["replyToInbound"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/logs": {
         parameters: {
             query?: never;
@@ -380,7 +724,7 @@ export interface paths {
         get: {
             parameters: {
                 query?: {
-                    status?: "pending" | "sent" | "delivered" | "bounced" | "complained" | "failed";
+                    status?: "scheduled" | "cancelled" | "pending" | "sent" | "delivered" | "bounced" | "complained" | "failed";
                     domainId?: string;
                     recipient?: string;
                     cursor?: string;
@@ -407,12 +751,13 @@ export interface paths {
                                 bccAddress: string | null;
                                 subject: string;
                                 /** @enum {string} */
-                                status: "pending" | "sent" | "delivered" | "bounced" | "complained" | "failed";
+                                status: "scheduled" | "cancelled" | "pending" | "sent" | "delivered" | "bounced" | "complained" | "failed";
                                 isTest: boolean;
                                 createdAt: string;
                                 sentAt: string | null;
                                 deliveredAt: string | null;
                                 bouncedAt: string | null;
+                                latencyMs: number | null;
                             }[];
                             nextCursor: string | null;
                         };
@@ -460,7 +805,7 @@ export interface paths {
                             bccAddress: string | null;
                             subject: string;
                             /** @enum {string} */
-                            status: "pending" | "sent" | "delivered" | "bounced" | "complained" | "failed";
+                            status: "scheduled" | "cancelled" | "pending" | "sent" | "delivered" | "bounced" | "complained" | "failed";
                             createdAt: string;
                             sentAt: string | null;
                             deliveredAt: string | null;
@@ -570,13 +915,10 @@ export interface paths {
                             complained: number;
                             pending: number;
                             deliveryRate: number;
+                            bounceRate: number;
+                            complaintRate: number;
                             trends: {
                                 sent: {
-                                    value: number;
-                                    /** @enum {string} */
-                                    direction: "up" | "down" | "flat" | "new";
-                                };
-                                delivered: {
                                     value: number;
                                     /** @enum {string} */
                                     direction: "up" | "down" | "flat" | "new";
@@ -586,7 +928,12 @@ export interface paths {
                                     /** @enum {string} */
                                     direction: "up" | "down" | "flat" | "new";
                                 };
-                                bounced: {
+                                bounceRate: {
+                                    value: number;
+                                    /** @enum {string} */
+                                    direction: "up" | "down" | "flat" | "new";
+                                };
+                                complaintRate: {
                                     value: number;
                                     /** @enum {string} */
                                     direction: "up" | "down" | "flat" | "new";
@@ -614,7 +961,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/suppressions": {
+    "/v1/suppressions": {
         parameters: {
             query?: never;
             header?: never;
@@ -661,7 +1008,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/suppressions/{email}": {
+    "/v1/suppressions/{email}": {
         parameters: {
             query?: never;
             header?: never;
@@ -1021,6 +1368,187 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/domains/{id}/health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Domain health score and factors */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["DomainHealth"];
+                    };
+                };
+                /** @description Analytics not available on current plan */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/domains/{id}/warmup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Domain warmup status */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["DomainWarmup"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/domains/{id}/tracking": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Tracking configuration for domain */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TrackingConfig"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdateTrackingConfigRequest"];
+                };
+            };
+            responses: {
+                /** @description Updated tracking configuration */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TrackingConfig"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
     "/v1/domains/{id}/inbound": {
         parameters: {
             query?: never;
@@ -1046,11 +1574,13 @@ export interface paths {
                     };
                     content: {
                         "application/json": {
-                            /** @enum {string} */
-                            mode: "disabled" | "forward" | "webhook";
+                            forwardEnabled: boolean;
+                            webhookEnabled: boolean;
+                            slackEnabled: boolean;
                             forwardTo: string | null;
                             webhookUrl: string | null;
                             hasSecret: boolean;
+                            slackWebhookUrl: string | null;
                             mxRecords: {
                                 priority: number;
                                 host: string;
@@ -1082,12 +1612,15 @@ export interface paths {
             requestBody?: {
                 content: {
                     "application/json": {
-                        /** @enum {string} */
-                        mode: "disabled" | "forward" | "webhook";
+                        forwardEnabled?: boolean;
+                        webhookEnabled?: boolean;
+                        slackEnabled?: boolean;
                         /** Format: email */
-                        forwardTo?: string;
+                        forwardTo?: string | null;
                         /** Format: uri */
-                        webhookUrl?: string;
+                        webhookUrl?: string | null;
+                        /** Format: uri */
+                        slackWebhookUrl?: string | null;
                     };
                 };
             };
@@ -1099,11 +1632,13 @@ export interface paths {
                     };
                     content: {
                         "application/json": {
-                            /** @enum {string} */
-                            mode: "disabled" | "forward" | "webhook";
+                            forwardEnabled: boolean;
+                            webhookEnabled: boolean;
+                            slackEnabled: boolean;
                             forwardTo: string | null;
                             webhookUrl: string | null;
                             hasSecret: boolean;
+                            slackWebhookUrl: string | null;
                             mxRecords: {
                                 priority: number;
                                 host: string;
@@ -1205,7 +1740,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/v1/domains/{id}/inbound/test": {
+    "/v1/domains/{id}/inbound/test-webhook": {
         parameters: {
             query?: never;
             header?: never;
@@ -1264,6 +1799,65 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/domains/{id}/inbound/test-slack": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Test Slack result */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            success: boolean;
+                            statusCode: number | null;
+                            error: string | null;
+                        };
+                    };
+                };
+                /** @description Slack not configured */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Domain not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/templates": {
         parameters: {
             query?: never;
@@ -1285,7 +1879,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/v1/templates/{id}": {
+    "/v1/templates/{templateId}": {
         parameters: {
             query?: never;
             header?: never;
@@ -1384,6 +1978,190 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/forms": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description List of forms */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Form"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreateFormRequest"];
+                };
+            };
+            responses: {
+                /** @description Created form */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Form"];
+                    };
+                };
+                /** @description Validation error or domain not verified */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Form limit reached */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/forms/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Form details */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Form"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Deleted */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdateFormRequest"];
+                };
+            };
+            responses: {
+                /** @description Updated form */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Form"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
     "/v1/invitations/pending": {
         parameters: {
             query?: never;
@@ -1434,7 +2212,75 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/webhooks/sns": {
+    "/public/form/{formId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    formId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["SubmitFormRequest"];
+                };
+            };
+            responses: {
+                /** @description Submission received */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SubmitFormSuccess"];
+                    };
+                };
+                /** @description Invalid submission */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Form not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Rate limited */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/webhooks/incoming/sns": {
         parameters: {
             query?: never;
             header?: never;
@@ -1481,7 +2327,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/webhooks/sns/inbound": {
+    "/webhooks/incoming/sns-inbound": {
         parameters: {
             query?: never;
             header?: never;
@@ -1552,7 +2398,49 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/webhooks/config": {
+    "/webhooks/incoming/stripe": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Webhook processed */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Invalid webhook */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/webhooks": {
         parameters: {
             query?: never;
             header?: never;
@@ -1630,7 +2518,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/webhooks/config/enable": {
+    "/v1/webhooks/enable": {
         parameters: {
             query?: never;
             header?: never;
@@ -1693,7 +2581,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/webhooks/config/disable": {
+    "/v1/webhooks/disable": {
         parameters: {
             query?: never;
             header?: never;
@@ -1730,7 +2618,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/webhooks/config/regenerate-secret": {
+    "/v1/webhooks/regenerate-secret": {
         parameters: {
             query?: never;
             header?: never;
@@ -1776,7 +2664,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/webhooks/config/test": {
+    "/v1/webhooks/test": {
         parameters: {
             query?: never;
             header?: never;
@@ -1815,7 +2703,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/webhooks/config/deliveries": {
+    "/v1/webhooks/deliveries": {
         parameters: {
             query?: never;
             header?: never;
@@ -1863,7 +2751,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/webhooks/config/verify": {
+    "/v1/webhooks/verify": {
         parameters: {
             query?: never;
             header?: never;
@@ -1914,15 +2802,241 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/t/o/{trackingId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    trackingId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Tracking pixel */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/t/c/{trackingId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    trackingId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Redirect to original URL */
+                302: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Link not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/contact": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["ContactRequest"];
+                };
+            };
+            responses: {
+                /** @description Message sent */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                        };
+                    };
+                };
+                /** @description Invalid request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            message: string;
+                            code: string;
+                        };
+                    };
+                };
+                /** @description Rate limited */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            message: string;
+                            code: string;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        Alert: {
+            id: string;
+            domainId: string | null;
+            domainName: string | null;
+            /** @enum {string} */
+            type: "bounce_rate" | "complaint_rate" | "dns_temp_failure" | "dns_failed";
+            /** @enum {string} */
+            severity: "warning" | "critical";
+            title: string;
+            message: string;
+            data?: unknown;
+            readAt: string | null;
+            createdAt: string;
+        };
+        AlertListResponse: {
+            alerts: components["schemas"]["Alert"][];
+            unreadCount: number;
+        };
         Error: {
             /** @example Invalid request */
             message: string;
             /** @example VALIDATION_ERROR */
             code?: string;
+        };
+        UnreadCountResponse: {
+            count: number;
+        };
+        MarkAsReadResponse: {
+            success: boolean;
+        };
+        MarkAllAsReadResponse: {
+            count: number;
+        };
+        AlertSettings: {
+            bounceThreshold: number;
+            complaintThreshold: number;
+            emailsEnabled: boolean;
+        };
+        UpdateAlertSettingsRequest: {
+            bounceThreshold?: number;
+            complaintThreshold?: number;
+            emailsEnabled?: boolean;
+        };
+        ReplyToInboundResponse: {
+            /** @description Inbound email ID */
+            id: string;
+            /** @description Created reply email ID */
+            emailId: string;
+        };
+        AttachmentInput: {
+            /** @example invoice.pdf */
+            filename: string;
+            /**
+             * @description MIME type (inferred from filename if omitted)
+             * @example application/pdf
+             */
+            contentType?: string;
+            /** @description Base64-encoded file content */
+            content?: string;
+            /**
+             * Format: uri
+             * @description URL to fetch attachment from (HTTPS only)
+             * @example https://example.com/invoice.pdf
+             */
+            path?: string;
+        };
+        ReplyToInboundRequest: {
+            /** @description HTML body for the reply */
+            html: string;
+            /** @description Plain text body (optional, auto-generated from HTML if omitted) */
+            text?: string;
+            /** @description Subject line. Defaults to 'Re: [original subject]' */
+            subject?: string;
+            /**
+             * @description Include original CC recipients in reply
+             * @default false
+             */
+            includeOriginalCc: boolean;
+            /** @description Additional CC recipients */
+            additionalCc?: string[];
+            /** @description Additional BCC recipients */
+            additionalBcc?: string[];
+            /** @description File attachments */
+            attachments?: components["schemas"]["AttachmentInput"][];
+            /** @description Custom email headers */
+            headers?: {
+                [key: string]: string;
+            };
         };
         AttachmentMeta: {
             /** @example invoice.pdf */
@@ -1979,8 +3093,7 @@ export interface components {
             createdAt: string;
         };
         DomainListItem: components["schemas"]["Domain"] & {
-            /** @enum {string} */
-            inboundMode: "disabled" | "forward" | "webhook";
+            inboundEnabled: boolean;
             inboundReady: boolean;
         };
         DnsRecord: {
@@ -1997,6 +3110,8 @@ export interface components {
         };
         CreateDomainRequest: {
             name: string;
+            /** Format: email */
+            testEmailAddress?: string;
         };
         RecordStatus: {
             found: boolean;
@@ -2013,6 +3128,37 @@ export interface components {
             domain: components["schemas"]["Domain"];
             verification: components["schemas"]["VerificationStatus"];
         };
+        DomainHealth: {
+            score: number;
+            factors: {
+                name: string;
+                score: number;
+                maxScore: number;
+                description: string;
+            }[];
+            recommendations: string[];
+        };
+        DomainWarmup: {
+            domainAgeDays: number;
+            warmupDays: number;
+            progress: number;
+            recommendedDailyMax?: number;
+            currentDailyRate: number;
+            isWarmedUp: boolean;
+            /** @enum {string} */
+            status: "on_track" | "too_fast" | "warmed_up";
+            message: string;
+        };
+        TrackingConfig: {
+            openTrackingEnabled: boolean;
+            clickTrackingEnabled: boolean;
+            privacyMode: boolean;
+        };
+        UpdateTrackingConfigRequest: {
+            openTrackingEnabled?: boolean;
+            clickTrackingEnabled?: boolean;
+            privacyMode?: boolean;
+        };
         /** @description Domain this template is scoped to (null = org-wide) */
         TemplateDomain: {
             /** @example dom_abc123 */
@@ -2021,10 +3167,10 @@ export interface components {
             name: string;
         } | null;
         Template: {
-            /** @example tpl_abc123 */
+            /** @example cuid123 */
             id: string;
             /** @example welcome-email */
-            name: string;
+            templateId: string;
             /** @example Welcome to {{company}}, {{name}}! */
             subject: string;
             /** @description HTML template with {{variable}} placeholders */
@@ -2050,7 +3196,7 @@ export interface components {
              * @description Unique template identifier (lowercase, dashes allowed)
              * @example welcome-email
              */
-            name: string;
+            templateId: string;
             /**
              * @description Email subject with optional {{variables}}
              * @example Welcome to {{company}}!
@@ -2067,7 +3213,6 @@ export interface components {
             domainId?: string;
         };
         UpdateTemplateRequest: {
-            name?: string;
             subject?: string;
             html?: string | null;
             text?: string | null;
@@ -2094,23 +3239,6 @@ export interface components {
             scheduled_at?: string;
             /** @description List of suppressed recipient addresses (bounced/complained previously) */
             suppressed?: string[];
-        };
-        AttachmentInput: {
-            /** @example invoice.pdf */
-            filename: string;
-            /**
-             * @description MIME type (inferred from filename if omitted)
-             * @example application/pdf
-             */
-            contentType?: string;
-            /** @description Base64-encoded file content */
-            content?: string;
-            /**
-             * Format: uri
-             * @description URL to fetch attachment from (HTTPS only)
-             * @example https://example.com/invoice.pdf
-             */
-            path?: string;
         };
         SendEmailRequest: {
             /**
@@ -2293,6 +3421,80 @@ export interface components {
             attachments: components["schemas"]["AttachmentMeta"][] | null;
             hasBody: boolean;
         };
+        Form: {
+            id: string;
+            domainId: string;
+            domainName: string;
+            name: string;
+            toAddresses: string[];
+            subject: string | null;
+            replyToSubmitter: boolean;
+            redirectUrl: string | null;
+            allowedOrigins: string[];
+            isActive: boolean;
+            createdAt: string;
+            updatedAt: string;
+        };
+        CreateFormRequest: {
+            /** @description Domain ID to use */
+            domainId: string;
+            /** @example contact */
+            name: string;
+            /** @description Recipients (max 5) */
+            toAddresses: string[];
+            /**
+             * @description Email subject (default: 'New submission from {name}')
+             * @example New contact form submission
+             */
+            subject?: string;
+            /**
+             * @description Set Reply-To to submitter's email
+             * @default true
+             */
+            replyToSubmitter: boolean;
+            /**
+             * Format: uri
+             * @description Redirect URL after submission
+             */
+            redirectUrl?: string;
+            /**
+             * @description Allowed CORS origins (empty = domain only)
+             * @default []
+             */
+            allowedOrigins: string[];
+        };
+        UpdateFormRequest: {
+            name?: string;
+            toAddresses?: string[];
+            subject?: string | null;
+            replyToSubmitter?: boolean;
+            /** Format: uri */
+            redirectUrl?: string | null;
+            allowedOrigins?: string[];
+            isActive?: boolean;
+        };
+        SubmitFormSuccess: {
+            /** @enum {boolean} */
+            success: true;
+        };
+        SubmitFormRequest: {
+            /**
+             * Format: email
+             * @description Submitter email
+             */
+            email: string;
+            /** @description Submitter name */
+            name?: string;
+            /** @description Spam protection - must be empty */
+            _honeypot?: string;
+        };
+        ContactRequest: {
+            name: string;
+            /** Format: email */
+            email: string;
+            message: string;
+            _honeypot?: string;
+        };
     };
     responses: never;
     parameters: never;
@@ -2302,6 +3504,242 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    listAlerts: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description List of alerts */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlertListResponse"];
+                };
+            };
+            /** @description Alerts not available on current plan */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    getUnreadAlertCount: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Number of unread alerts */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnreadCountResponse"];
+                };
+            };
+        };
+    };
+    markAlertAsRead: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Alert marked as read */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarkAsReadResponse"];
+                };
+            };
+            /** @description Alert not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    markAllAlertsAsRead: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Number of alerts marked as read */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarkAllAsReadResponse"];
+                };
+            };
+        };
+    };
+    getAlertSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Alert settings */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlertSettings"];
+                };
+            };
+            /** @description Alerts not available on current plan */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Organization not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    updateAlertSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["UpdateAlertSettingsRequest"];
+            };
+        };
+        responses: {
+            /** @description Updated alert settings */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlertSettings"];
+                };
+            };
+            /** @description Alerts not available on current plan */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    replyToInbound: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["ReplyToInboundRequest"];
+            };
+        };
+        responses: {
+            /** @description Reply sent successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReplyToInboundResponse"];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Email quota exceeded */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Domain not verified or sending disabled */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Inbound email not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
     listTemplates: {
         parameters: {
             query?: never;
@@ -2344,7 +3782,7 @@ export interface operations {
                     "application/json": components["schemas"]["Template"];
                 };
             };
-            /** @description Template name already exists or invalid format */
+            /** @description Template ID already exists or invalid format */
             400: {
                 headers: {
                     [name: string]: unknown;
@@ -2369,7 +3807,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                id: string;
+                templateId: string;
             };
             cookie?: never;
         };
@@ -2400,7 +3838,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                id: string;
+                templateId: string;
             };
             cookie?: never;
         };
@@ -2429,7 +3867,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                id: string;
+                templateId: string;
             };
             cookie?: never;
         };
@@ -2446,15 +3884,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Template"];
-                };
-            };
-            /** @description Template name already exists */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
                 };
             };
             /** @description Template not found */

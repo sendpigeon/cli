@@ -15,6 +15,58 @@ describe("SendPigeon", () => {
 		});
 		expect(client).toBeDefined();
 	});
+
+	it("uses dev server when SENDPIGEON_DEV=true", async () => {
+		const mockFetch = vi.fn().mockResolvedValueOnce({
+			ok: true,
+			json: () => Promise.resolve({ id: "dev_123" }),
+		});
+		vi.stubGlobal("fetch", mockFetch);
+		vi.stubEnv("SENDPIGEON_DEV", "true");
+
+		const client = new SendPigeon("test-key");
+		await client.send({
+			from: "a@b.com",
+			to: "c@d.com",
+			subject: "Test",
+			html: "<p>Hi</p>",
+		});
+
+		expect(mockFetch).toHaveBeenCalledWith(
+			"http://localhost:4100/v1/emails",
+			expect.any(Object),
+		);
+
+		vi.unstubAllEnvs();
+		vi.unstubAllGlobals();
+	});
+
+	it("explicit baseUrl overrides SENDPIGEON_DEV", async () => {
+		const mockFetch = vi.fn().mockResolvedValueOnce({
+			ok: true,
+			json: () => Promise.resolve({ id: "123" }),
+		});
+		vi.stubGlobal("fetch", mockFetch);
+		vi.stubEnv("SENDPIGEON_DEV", "true");
+
+		const client = new SendPigeon("test-key", {
+			baseUrl: "https://custom.api.com",
+		});
+		await client.send({
+			from: "a@b.com",
+			to: "c@d.com",
+			subject: "Test",
+			html: "<p>Hi</p>",
+		});
+
+		expect(mockFetch).toHaveBeenCalledWith(
+			"https://custom.api.com/v1/emails",
+			expect.any(Object),
+		);
+
+		vi.unstubAllEnvs();
+		vi.unstubAllGlobals();
+	});
 });
 
 describe("send", () => {
@@ -307,7 +359,7 @@ describe("templates", () => {
 	const mockFetch = vi.fn();
 	const mockTemplate: Template = {
 		id: "tpl_abc123",
-		name: "welcome-email",
+		templateId: "welcome-email",
 		subject: "Welcome {{name}}!",
 		html: "<p>Hello {{name}}</p>",
 		text: null,
@@ -363,7 +415,7 @@ describe("templates", () => {
 
 		const client = new SendPigeon("test-key");
 		const { data } = await client.templates.create({
-			name: "welcome-email",
+			templateId: "welcome-email",
 			subject: "Welcome {{name}}!",
 			html: "<p>Hello {{name}}</p>",
 		});
@@ -373,7 +425,7 @@ describe("templates", () => {
 			expect.objectContaining({
 				method: "POST",
 				body: JSON.stringify({
-					name: "welcome-email",
+					templateId: "welcome-email",
 					subject: "Welcome {{name}}!",
 					html: "<p>Hello {{name}}</p>",
 				}),

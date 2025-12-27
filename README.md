@@ -44,6 +44,20 @@ const pigeon = new SendPigeon("sp_live_your_api_key", {
 
 Retries use exponential backoff and respect `Retry-After` headers.
 
+## Local Development
+
+Use [sendpigeon-dev](https://www.npmjs.com/package/sendpigeon-dev) to catch emails locally:
+
+```bash
+# Terminal 1: Start local server
+npx sendpigeon-dev
+
+# Terminal 2: Run your app with dev mode
+SENDPIGEON_DEV=true npm run dev
+```
+
+When `SENDPIGEON_DEV=true`, the SDK routes requests to `localhost:4100` instead of production.
+
 ## Available Methods
 
 ```typescript
