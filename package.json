@@ -1,0 +1,39 @@
+{
+	"name": "@sendpigeon-sdk/cli",
+	"version": "1.0.0",
+	"description": "SendPigeon CLI - local dev server and tools",
+	"type": "module",
+	"bin": {
+		"sendpigeon": "./dist/cli.js"
+	},
+	"main": "./dist/index.js",
+	"files": ["dist"],
+	"scripts": {
+		"build": "tsc && cp -r src/ui dist/ui",
+		"dev": "npm run build && node dist/cli.js dev",
+		"prepublishOnly": "npm run build",
+		"lint": "biome check .",
+		"format": "biome format --write .",
+		"check": "biome check --write ."
+	},
+	"keywords": ["sendpigeon", "email", "cli", "development", "testing"],
+	"author": "SendPigeon",
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/sendpigeon/sdk-cli"
+	},
+	"dependencies": {
+		"@hono/node-server": "^1.13.7",
+		"hono": "^4.6.16",
+		"nanoid": "^5.0.9"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^1.9.4",
+		"@types/node": "^22.10.2",
+		"typescript": "^5.7.2"
+	},
+	"engines": {
+		"node": ">=18"
+	}
+}
