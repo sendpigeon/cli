@@ -1,6 +1,6 @@
 import { createHmac } from "node:crypto";
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { SendPigeon, verifyWebhook, type Template } from "./index.js";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { SendPigeon, type Template, verifyWebhook } from "./index.js";
 
 describe("SendPigeon", () => {
 	it("has send method", () => {
@@ -309,7 +309,12 @@ describe("error handling", () => {
 			.mockResolvedValueOnce({
 				ok: true,
 				status: 200,
-				json: () => Promise.resolve({ id: "email_retry", status: "sent", suppressed: [] }),
+				json: () =>
+					Promise.resolve({
+						id: "email_retry",
+						status: "sent",
+						suppressed: [],
+					}),
 			});
 
 		const client = new SendPigeon("test-key", { maxRetries: 1 });
@@ -360,10 +365,12 @@ describe("templates", () => {
 	const mockTemplate: Template = {
 		id: "tpl_abc123",
 		templateId: "welcome-email",
+		name: "Welcome Email",
 		subject: "Welcome {{name}}!",
 		html: "<p>Hello {{name}}</p>",
 		text: null,
-		variables: ["name"],
+		variables: [{ key: "name", type: "string" }],
+		status: "draft",
 		domain: null,
 		createdAt: "2024-01-15T10:30:00Z",
 		updatedAt: "2024-01-15T10:30:00Z",
@@ -565,7 +572,8 @@ describe("emails.get", () => {
 		mockFetch.mockResolvedValueOnce({
 			ok: false,
 			status: 404,
-			json: () => Promise.resolve({ message: "Email not found", code: "NOT_FOUND" }),
+			json: () =>
+				Promise.resolve({ message: "Email not found", code: "NOT_FOUND" }),
 		});
 
 		const client = new SendPigeon("test-key");
@@ -612,6 +620,57 @@ describe("apiCode error handling", () => {
 		expect(error?.code).toBe("api_error");
 		expect(error?.apiCode).toBe("QUOTA_EXCEEDED");
 		expect(error?.status).toBe(402);
+	});
+});
+
+describe("react email support", () => {
+	const mockFetch = vi.fn();
+
+	beforeEach(() => {
+		vi.stubGlobal("fetch", mockFetch);
+	});
+
+	afterEach(() => {
+		vi.unstubAllGlobals();
+		mockFetch.mockReset();
+		vi.resetModules();
+	});
+
+	it("returns error when both react and html provided", async () => {
+		const client = new SendPigeon("test-key");
+		const { data, error } = await client.send({
+			from: "test@example.com",
+			to: "recipient@example.com",
+			subject: "Test",
+			html: "<p>Hello</p>",
+			react: { type: "div", props: {}, key: null },
+		});
+
+		expect(data).toBeNull();
+		expect(error?.message).toBe(
+			"Cannot use both 'react' and 'html' properties",
+		);
+		expect(error?.code).toBe("api_error");
+		expect(mockFetch).not.toHaveBeenCalled();
+	});
+
+	it("returns error when both react and html provided in batch", async () => {
+		const client = new SendPigeon("test-key");
+		const { data, error } = await client.sendBatch([
+			{
+				from: "test@example.com",
+				to: "recipient@example.com",
+				subject: "Test",
+				html: "<p>Hello</p>",
+				react: { type: "div", props: {}, key: null },
+			},
+		]);
+
+		expect(data).toBeNull();
+		expect(error?.message).toBe(
+			"Cannot use both 'react' and 'html' properties",
+		);
+		expect(mockFetch).not.toHaveBeenCalled();
 	});
 });
 

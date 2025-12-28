@@ -16,10 +16,7 @@ async function generate() {
 	const ast = await openapiTS(new URL(url));
 	const content = astToString(ast);
 
-	const outPath = path.join(
-		import.meta.dirname,
-		"../src/generated/schema.ts",
-	);
+	const outPath = path.join(import.meta.dirname, "../src/generated/schema.ts");
 	fs.writeFileSync(outPath, content);
 
 	console.log(`Generated ${outPath}`);

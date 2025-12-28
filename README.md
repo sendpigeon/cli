@@ -46,11 +46,11 @@ Retries use exponential backoff and respect `Retry-After` headers.
 
 ## Local Development
 
-Use [sendpigeon-dev](https://www.npmjs.com/package/sendpigeon-dev) to catch emails locally:
+Use [@sendpigeon-sdk/cli](https://www.npmjs.com/package/@sendpigeon-sdk/cli) to catch emails locally:
 
 ```bash
 # Terminal 1: Start local server
-npx sendpigeon-dev
+npx @sendpigeon-sdk/cli dev
 
 # Terminal 2: Run your app with dev mode
 SENDPIGEON_DEV=true npm run dev

@@ -15,13 +15,9 @@ export type WebhookPayloadData = {
 	subject?: string;
 	bounceType?: string;
 	complaintType?: string;
-	/** Present for email.opened events */
 	openedAt?: string;
-	/** Present for email.clicked events */
 	clickedAt?: string;
-	/** URL that was clicked (email.clicked only) */
 	linkUrl?: string;
-	/** Index of clicked link in email (email.clicked only) */
 	linkIndex?: number;
 };
 
@@ -35,7 +31,6 @@ export type InboundAttachment = {
 	filename: string;
 	contentType: string;
 	size: number;
-	/** Presigned URL (expires after 1 hour) */
 	url: string;
 };
 
@@ -47,7 +42,6 @@ export type InboundEmailData = {
 	text: string | null;
 	html: string | null;
 	attachments: InboundAttachment[];
-	/** Presigned URL to raw email (expires after 1 hour) */
 	rawUrl: string;
 };
 
@@ -57,16 +51,13 @@ export type InboundEmailEvent = {
 	data: InboundEmailData;
 };
 
-type BaseVerifyOptions = {
+export type WebhookVerifyOptions = {
 	payload: string;
 	signature: string;
 	timestamp: string;
 	secret: string;
 	maxAge?: number;
 };
-
-export type WebhookVerifyOptions = BaseVerifyOptions;
-export type InboundWebhookVerifyOptions = BaseVerifyOptions;
 
 export type WebhookVerifyResult =
 	| { valid: true; payload: WebhookPayload }
@@ -78,16 +69,47 @@ export type InboundWebhookVerifyResult =
 
 const WEBHOOK_MAX_AGE_SECONDS = 300;
 
-type VerifyResult<T> = { valid: true; payload: T } | { valid: false; error: string };
+type VerifyResult<T> =
+	| { valid: true; payload: T }
+	| { valid: false; error: string };
+
+function isValidInboundEvent(parsed: unknown): parsed is InboundEmailEvent {
+	if (typeof parsed !== "object" || parsed === null) {
+		return false;
+	}
+	const obj = parsed as Record<string, unknown>;
+	if (obj.event !== "email.received") {
+		return false;
+	}
+	if (typeof obj.timestamp !== "string") {
+		return false;
+	}
+	if (typeof obj.data !== "object" || obj.data === null) {
+		return false;
+	}
+	const data = obj.data as Record<string, unknown>;
+	return (
+		typeof data.id === "string" &&
+		typeof data.from === "string" &&
+		typeof data.to === "string" &&
+		typeof data.subject === "string"
+	);
+}
 
 function verifySignature<T>(
-	options: BaseVerifyOptions,
+	options: WebhookVerifyOptions,
 	validatePayload?: (parsed: unknown) => T | null,
 ): VerifyResult<T> {
-	const { payload, signature, timestamp, secret, maxAge = WEBHOOK_MAX_AGE_SECONDS } = options;
+	const {
+		payload,
+		signature,
+		timestamp,
+		secret,
+		maxAge = WEBHOOK_MAX_AGE_SECONDS,
+	} = options;
 
-	const ts = parseInt(timestamp, 10);
-	if (isNaN(ts)) {
+	const ts = Number.parseInt(timestamp, 10);
+	if (Number.isNaN(ts)) {
 		return { valid: false, error: "Invalid timestamp" };
 	}
 
@@ -135,15 +157,19 @@ function verifySignature<T>(
 	}
 }
 
-/** Verify a SendPigeon webhook signature. Requires Node.js. */
-export function verifyWebhook(options: WebhookVerifyOptions): WebhookVerifyResult {
+export function verifyWebhook(
+	options: WebhookVerifyOptions,
+): WebhookVerifyResult {
 	return verifySignature<WebhookPayload>(options);
 }
 
-/** Verify an inbound email webhook signature. Requires Node.js. */
-export function verifyInboundWebhook(options: InboundWebhookVerifyOptions): InboundWebhookVerifyResult {
+export function verifyInboundWebhook(
+	options: WebhookVerifyOptions,
+): InboundWebhookVerifyResult {
 	return verifySignature<InboundEmailEvent>(options, (parsed) => {
-		const event = parsed as InboundEmailEvent;
-		return event.event === "email.received" ? event : null;
+		if (isValidInboundEvent(parsed)) {
+			return parsed;
+		}
+		return null;
 	});
 }
