@@ -1,13 +1,15 @@
 {
 	"name": "@sendpigeon-sdk/cli",
-	"version": "1.1.0",
+	"version": "1.1.1",
 	"description": "SendPigeon CLI - send emails and manage your account",
 	"type": "module",
 	"bin": {
 		"sendpigeon": "./dist/cli.js"
 	},
 	"main": "./dist/index.js",
-	"files": ["dist"],
+	"files": [
+		"dist"
+	],
 	"scripts": {
 		"build": "tsc && cp -r src/ui dist/ui",
 		"dev": "npm run build && node dist/cli.js dev",
@@ -18,7 +20,13 @@
 		"format": "biome format --write .",
 		"check": "biome check --write ."
 	},
-	"keywords": ["sendpigeon", "email", "cli", "development", "testing"],
+	"keywords": [
+		"sendpigeon",
+		"email",
+		"cli",
+		"development",
+		"testing"
+	],
 	"author": "SendPigeon",
 	"license": "MIT",
 	"repository": {
