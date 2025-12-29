@@ -38,20 +38,24 @@ export const statusCommand = new Command("status")
 		);
 		console.log("");
 		console.log(`  ${chalk.dim("Usage this period:")}`);
-		console.log(
-			`    ${usage.emailsSent.toLocaleString()} / ${usage.emailLimit.toLocaleString()} emails (${usage.percentUsed}%)`,
-		);
+		if (usage.emailLimit === null) {
+			console.log(`    ${usage.emailsSent.toLocaleString()} emails (unlimited)`);
+		} else {
+			console.log(
+				`    ${usage.emailsSent.toLocaleString()} / ${usage.emailLimit.toLocaleString()} emails (${usage.percentUsed}%)`,
+			);
 
-		// Progress bar
-		const barWidth = 30;
-		const filled = Math.round((usage.percentUsed / 100) * barWidth);
-		const empty = barWidth - filled;
-		const barColor =
-			usage.percentUsed > 90
-				? chalk.red
-				: usage.percentUsed > 70
-					? chalk.yellow
-					: chalk.green;
-		const bar = barColor("█".repeat(filled)) + chalk.dim("░".repeat(empty));
-		console.log(`    [${bar}]`);
+			// Progress bar
+			const barWidth = 30;
+			const filled = Math.round((usage.percentUsed / 100) * barWidth);
+			const empty = barWidth - filled;
+			const barColor =
+				usage.percentUsed > 90
+					? chalk.red
+					: usage.percentUsed > 70
+						? chalk.yellow
+						: chalk.green;
+			const bar = barColor("█".repeat(filled)) + chalk.dim("░".repeat(empty));
+			console.log(`    [${bar}]`);
+		}
 	});

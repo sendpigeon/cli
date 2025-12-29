@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.1.1
+
+- Fix status command to handle unlimited email plans
+
+## 1.1.0
+
+- Add send, status, templates, logs, webhooks, domains commands
+
 ## 1.0.1
 
 - Added test suite (22 tests) for storage and email parsing
