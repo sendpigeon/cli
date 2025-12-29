@@ -25,7 +25,10 @@ export const sendCommand = new Command("send")
 		"--to <email>",
 		"Recipient email address(es), comma-separated",
 	)
-	.option("--from <email>", "Sender email address")
+	.requiredOption(
+		"--from <email>",
+		"Sender email address (must be verified domain)",
+	)
 	.option("--subject <subject>", "Email subject")
 	.option("--html <html>", "HTML body")
 	.option("--text <text>", "Plain text body")

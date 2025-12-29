@@ -7,9 +7,7 @@
 		"sendpigeon": "./dist/cli.js"
 	},
 	"main": "./dist/index.js",
-	"files": [
-		"dist"
-	],
+	"files": ["dist"],
 	"scripts": {
 		"build": "tsc && cp -r src/ui dist/ui",
 		"dev": "npm run build && node dist/cli.js dev",
@@ -20,13 +18,7 @@
 		"format": "biome format --write .",
 		"check": "biome check --write ."
 	},
-	"keywords": [
-		"sendpigeon",
-		"email",
-		"cli",
-		"development",
-		"testing"
-	],
+	"keywords": ["sendpigeon", "email", "cli", "development", "testing"],
 	"author": "SendPigeon",
 	"license": "MIT",
 	"repository": {

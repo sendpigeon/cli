@@ -39,7 +39,9 @@ export const statusCommand = new Command("status")
 		console.log("");
 		console.log(`  ${chalk.dim("Usage this period:")}`);
 		if (usage.emailLimit === null) {
-			console.log(`    ${usage.emailsSent.toLocaleString()} emails (unlimited)`);
+			console.log(
+				`    ${usage.emailsSent.toLocaleString()} emails (unlimited)`,
+			);
 		} else {
 			console.log(
 				`    ${usage.emailsSent.toLocaleString()} / ${usage.emailLimit.toLocaleString()} emails (${usage.percentUsed}%)`,

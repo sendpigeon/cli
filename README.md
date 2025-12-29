@@ -37,12 +37,14 @@ Send an email:
 
 ```bash
 sendpigeon send \
+  --from hello@yourdomain.com \
   --to user@example.com \
   --subject "Hello" \
   --html "<p>Hi there!</p>"
 
 # With template
 sendpigeon send \
+  --from hello@yourdomain.com \
   --to user@example.com \
   --template welcome \
   --var name=John \
@@ -50,8 +52,8 @@ sendpigeon send \
 ```
 
 Options:
+- `--from <email>` - Sender address (required, must be verified domain)
 - `--to <email>` - Recipient (required, comma-separated for multiple)
-- `--from <email>` - Sender address
 - `--subject <text>` - Email subject
 - `--html <html>` - HTML body
 - `--text <text>` - Plain text body

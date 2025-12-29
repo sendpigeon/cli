@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.2
+
+- Make --from required in send command (matches API)
+
 ## 1.1.1
 
 - Fix status command to handle unlimited email plans
