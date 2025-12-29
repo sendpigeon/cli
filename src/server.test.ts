@@ -1,5 +1,5 @@
-import { afterEach, describe, expect, it } from "vitest";
 import { Hono } from "hono";
+import { afterEach, describe, expect, it } from "vitest";
 import { clearEmails, getEmails } from "./storage.js";
 
 // Extract the parseEmailRequest logic for testing

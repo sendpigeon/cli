@@ -1,15 +1,13 @@
 {
 	"name": "@sendpigeon-sdk/cli",
-	"version": "1.0.1",
-	"description": "SendPigeon CLI - local dev server and tools",
+	"version": "1.1.0",
+	"description": "SendPigeon CLI - send emails and manage your account",
 	"type": "module",
 	"bin": {
 		"sendpigeon": "./dist/cli.js"
 	},
 	"main": "./dist/index.js",
-	"files": [
-		"dist"
-	],
+	"files": ["dist"],
 	"scripts": {
 		"build": "tsc && cp -r src/ui dist/ui",
 		"dev": "npm run build && node dist/cli.js dev",
@@ -20,13 +18,7 @@
 		"format": "biome format --write .",
 		"check": "biome check --write ."
 	},
-	"keywords": [
-		"sendpigeon",
-		"email",
-		"cli",
-		"development",
-		"testing"
-	],
+	"keywords": ["sendpigeon", "email", "cli", "development", "testing"],
 	"author": "SendPigeon",
 	"license": "MIT",
 	"repository": {
@@ -35,12 +27,19 @@
 	},
 	"dependencies": {
 		"@hono/node-server": "^1.13.7",
+		"chalk": "^5.6.2",
+		"commander": "^14.0.2",
 		"hono": "^4.6.16",
-		"nanoid": "^5.0.9"
+		"mailparser": "^3.9.1",
+		"nanoid": "^5.0.9",
+		"ora": "^9.0.0",
+		"smtp-server": "^3.18.0"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^1.9.4",
+		"@types/mailparser": "^3.4.6",
 		"@types/node": "^22.10.2",
+		"@types/smtp-server": "^3.5.12",
 		"typescript": "^5.7.2",
 		"vitest": "^4.0.16"
 	},

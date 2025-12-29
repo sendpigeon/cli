@@ -1,5 +1,11 @@
 import { nanoid } from "nanoid";
 
+// TODO: Add SQLite persistence option (--persist flag)
+// - Store emails in ~/.sendpigeon/dev.db
+// - Survive server restarts
+// - Support larger capacity than 100 emails
+// - Add better-sqlite3 dependency
+
 export type Email = {
 	id: string;
 	from: string;
@@ -9,6 +15,7 @@ export type Email = {
 	text?: string;
 	headers?: Record<string, string>;
 	attachments?: Array<{ filename: string; size: number }>;
+	source?: "http" | "smtp";
 	createdAt: Date;
 };
 

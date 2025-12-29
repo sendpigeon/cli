@@ -3,10 +3,14 @@ import { fileURLToPath } from "node:url";
 import { serve } from "@hono/node-server";
 import { serveStatic } from "@hono/node-server/serve-static";
 import { Hono } from "hono";
+import { simpleParser } from "mailparser";
+import { SMTPServer } from "smtp-server";
 import { addEmail, clearEmails, getEmail, getEmails } from "./storage.js";
 
 type ServerOptions = {
-	port: number;
+	httpPort: number;
+	smtpPort: number;
+	enableSmtp: boolean;
 };
 
 type EmailRequest = {
@@ -91,8 +95,9 @@ export function startServer(options: ServerOptions): void {
 				filename: a.filename,
 				size: a.content?.length ?? 0,
 			})),
+			source: "http",
 		});
-		console.log(`  ${email.from} → ${email.to}: ${email.subject}`);
+		console.log(`  📧 ${email.from} → ${email.to}: ${email.subject}`);
 		return c.json({ id: email.id });
 	});
 
@@ -108,11 +113,44 @@ export function startServer(options: ServerOptions): void {
 
 	app.delete("/api/emails", (c) => {
 		clearEmails();
-		console.log("  Cleared all emails");
+		console.log("  🗑️  Cleared all emails");
 		return c.json({ ok: true });
 	});
 
 	app.use("/*", serveStatic({ root: uiPath }));
 
-	serve({ fetch: app.fetch, port: options.port });
+	serve({ fetch: app.fetch, port: options.httpPort });
+
+	if (options.enableSmtp) {
+		const smtp = new SMTPServer({
+			authOptional: true,
+			disabledCommands: ["STARTTLS"],
+			onData(stream, _session, callback) {
+				simpleParser(stream, (err, parsed) => {
+					if (err) {
+						callback(err);
+						return;
+					}
+					const toAddress = Array.isArray(parsed.to)
+						? parsed.to.map((t) => t.text).join(", ")
+						: (parsed.to?.text ?? "unknown");
+
+					const email = addEmail({
+						from: parsed.from?.text ?? "unknown",
+						to: toAddress,
+						subject: parsed.subject ?? "(no subject)",
+						html: parsed.html || undefined,
+						text: parsed.text,
+						source: "smtp",
+					});
+					console.log(
+						`  📧 [SMTP] ${email.from} → ${email.to}: ${email.subject}`,
+					);
+					callback();
+				});
+			},
+		});
+
+		smtp.listen(options.smtpPort);
+	}
 }
