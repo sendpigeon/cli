@@ -1,6 +1,6 @@
 {
 	"name": "@sendpigeon-sdk/cli",
-	"version": "1.1.2",
+	"version": "1.2.0",
 	"description": "SendPigeon CLI - send emails and manage your account",
 	"type": "module",
 	"bin": {

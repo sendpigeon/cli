@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.0
+
+- Add `--track-opens` and `--track-clicks` flags to send command
+- Display warnings in send output (e.g., if tracking disabled at org level)
+
 ## 1.1.2
 
 - Make --from required in send command (matches API)

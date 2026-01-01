@@ -48,6 +48,8 @@ export const sendCommand = new Command("send")
 		(v, prev: string[]) => [...prev, v],
 		[],
 	)
+	.option("--track-opens", "Enable open tracking")
+	.option("--track-clicks", "Enable click tracking")
 	.option("--api-key <key>", "API key (or set SENDPIGEON_API_KEY)")
 	.action(async (options) => {
 		const config = getConfig({ apiKey: options.apiKey });
@@ -86,6 +88,11 @@ export const sendCommand = new Command("send")
 		if (options.bcc) request.bcc = options.bcc;
 		if (options.replyTo) request.replyTo = options.replyTo;
 		if (options.tag.length > 0) request.tags = options.tag.slice(0, 5);
+		if (options.trackOpens || options.trackClicks) {
+			request.tracking = {};
+			if (options.trackOpens) request.tracking.opens = true;
+			if (options.trackClicks) request.tracking.clicks = true;
+		}
 
 		const spinner = ora("Sending email...").start();
 
@@ -106,4 +113,10 @@ export const sendCommand = new Command("send")
 		console.log(`  ID:     ${chalk.cyan(result.data.id)}`);
 		console.log(`  Status: ${result.data.status}`);
 		console.log(`  To:     ${options.to}`);
+		if (result.data.warnings?.length) {
+			console.log("");
+			for (const warning of result.data.warnings) {
+				console.log(chalk.yellow(`  ⚠ ${warning}`));
+			}
+		}
 	});

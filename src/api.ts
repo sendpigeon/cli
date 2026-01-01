@@ -70,11 +70,16 @@ export type SendEmailRequest = {
 	bcc?: string | string[];
 	replyTo?: string;
 	tags?: string[];
+	tracking?: {
+		opens?: boolean;
+		clicks?: boolean;
+	};
 };
 
 export type SendEmailResponse = {
 	id: string;
 	status: string;
+	warnings?: string[];
 };
 
 export type TemplateVariable = {

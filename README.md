@@ -61,6 +61,8 @@ Options:
 - `--var <key=value>` - Template variable (repeatable)
 - `--cc, --bcc, --reply-to` - Additional recipients
 - `--tag <tag>` - Add tag (repeatable, max 5)
+- `--track-opens` - Enable open tracking
+- `--track-clicks` - Enable click tracking
 
 ### sendpigeon status
 
