@@ -1,6 +1,6 @@
 {
 	"name": "@sendpigeon-sdk/cli",
-	"version": "1.2.1",
+	"version": "1.2.2",
 	"description": "SendPigeon CLI - send emails and manage your account",
 	"type": "module",
 	"bin": {
@@ -29,9 +29,9 @@
 	],
 	"author": "SendPigeon",
 	"license": "MIT",
-	"repository": {
-		"type": "git",
-		"url": "https://github.com/sendpigeon/sdk-cli"
+	"homepage": "https://sendpigeon.dev/docs/cli",
+	"bugs": {
+		"url": "https://sendpigeon.dev/docs/cli"
 	},
 	"dependencies": {
 		"@hono/node-server": "^1.13.7",
